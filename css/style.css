@@ -285,13 +285,13 @@
 }
 
 
-/*** Project ***/
+/*** portfolio ***/
 
-.project-item {
+.portfolio-item {
     position: relative;
 }
 
-.project-item .project-title {
+.portfolio-item .portfolio-title {
     position: absolute;
     top: auto;
     right: 1rem;
@@ -303,7 +303,7 @@
     transition: .5s;
 }
 
-.project-item:hover .project-title {
+.portfolio-item:hover .portfolio-title {
     color: #FFFFFF;
     background: var(--primary);
 }
