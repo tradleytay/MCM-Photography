@@ -1,10 +1,46 @@
-/********** Template CSS **********/
+/* ============================
+   Global Color Variables
+============================ */
 
 :root {
-    --primary: #EAA636;
-    --secondary: #545454;
-    --light: #FDF5EB;
-    --dark: #1E1916;
+    --primary: #C49A6C;
+    /* Muted Bronze */
+    --secondary: #6E6E6E;
+    /* Slate Gray */
+    --light: #FAF7F2;
+    /* Ivory Mist */
+    --dark: #2E2B28;
+    /* Charcoal Brown */
+}
+
+
+/* ============================
+   Base Styles
+============================ */
+
+body {
+    background-color: var(--light);
+    color: var(--dark);
+    font-family: 'Open Sans', sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--dark);
+    font-family: 'Montserrat', sans-serif;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: #b88a5a;
 }
 
 .back-to-top {
@@ -13,6 +49,62 @@
     right: 30px;
     bottom: 60px;
     z-index: 99;
+}
+
+
+/* Restore white backgrounds where needed */
+
+.navbar,
+.bg-white,
+#spinner,
+.img-fluid.bg-white {
+    background-color: #FFFFFF !important;
+}
+
+#about {
+    background-color: #FFFFFF;
+}
+
+
+/* ============================
+   Utility Classes
+============================ */
+
+.bg-primary {
+    background-color: var(--primary) !important;
+}
+
+.bg-light {
+    background-color: var(--light) !important;
+}
+
+.bg-dark {
+    background-color: var(--dark) !important;
+}
+
+.text-primary {
+    color: var(--primary) !important;
+}
+
+.text-light {
+    color: var(--light) !important;
+}
+
+.text-dark {
+    color: var(--dark) !important;
+}
+
+
+/* ============================
+   Spinner
+============================ */
+
+#spinner {
+    background-color: var(--light);
+}
+
+.spinner-grow.text-primary {
+    color: var(--primary);
 }
 
 
@@ -29,6 +121,24 @@
     transition: opacity .5s ease-out, visibility 0s linear 0s;
     visibility: visible;
     opacity: 1;
+}
+
+
+/* ============================
+   Buttons
+============================ */
+
+.btn-primary {
+    background-color: var(--primary);
+    color: var(--light);
+    border: 1px solid var(--secondary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #b88a5a;
+    border-color: #a07a4f;
+    color: var(--light);
 }
 
 
@@ -66,6 +176,24 @@
     align-items: center;
     justify-content: center;
     font-weight: normal;
+}
+
+
+/* ============================
+   Navbar
+============================ */
+
+.navbar {
+    background-color: var(--light);
+}
+
+.navbar-light .navbar-brand,
+.navbar-light .nav-link {
+    color: var(--dark);
+}
+
+.navbar-light .nav-link:hover {
+    color: var(--primary);
 }
 
 
@@ -121,6 +249,20 @@
         transition: .5s;
         opacity: 1;
     }
+}
+
+
+/* ============================
+   Hero Section
+============================ */
+
+.hero-header {
+    background-color: var(--light);
+    color: var(--dark);
+}
+
+.hero-header .text-primary {
+    color: var(--primary);
 }
 
 
@@ -412,6 +554,24 @@
 .testimonial-carousel .owl-nav .owl-next:hover {
     color: var(--primary);
     background: var(--dark);
+}
+
+
+/* ============================
+   Footer
+============================ */
+
+footer {
+    background-color: var(--dark);
+    color: var(--light);
+}
+
+footer a {
+    color: var(--primary);
+}
+
+footer a:hover {
+    color: #b88a5a;
 }
 
 
