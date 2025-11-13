@@ -3,12 +3,12 @@
 ============================ */
 
 :root {
-    --primary: #C49A6C;
+    --primary: #EAA636;
     /* Muted Bronze */
     --secondary: #6E6E6E;
     /* Slate Gray */
-    --light: #FAF7F2;
-    /* Ivory Mist */
+    --light: #FDF5EB;
+    /* pink */
     --dark: #2E2B28;
     /* Charcoal Brown */
 }
