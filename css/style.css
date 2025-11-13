@@ -131,7 +131,7 @@ a:hover {
 .btn-primary {
     background-color: var(--primary);
     color: var(--light);
-    border: 1px solid var(--secondary);
+    
 }
 
 .btn-primary:hover,
