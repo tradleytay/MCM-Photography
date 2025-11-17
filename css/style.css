@@ -3,7 +3,7 @@
 ============================ */
 
 :root {
-    --primary: #EAA636;
+    --primary: #b88a5a;
     /* Muted Bronze */
     --secondary: #6E6E6E;
     /* Slate Gray */
@@ -40,7 +40,7 @@ a {
 }
 
 a:hover {
-    color: #b88a5a;
+    color: #EAA636;
 }
 
 .back-to-top {
@@ -136,8 +136,8 @@ a:hover {
 
 .btn-primary:hover,
 .btn-primary:focus {
-    background-color: #b88a5a;
-    border-color: #a07a4f;
+    background-color: #EAA636;
+    border-color: #EAA636;
     color: var(--light);
 }
 
