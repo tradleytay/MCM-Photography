@@ -91,3 +91,76 @@
 
 
 })(jQuery);
+
+/* WhatsApp Booking Button
+   This code builds the wa.me link for elements with class `whatsapp-float`.
+   Replace `whatsappPhone` with your business number in E.164 format WITHOUT the leading + (e.g. 15551234567).
+*/
+(function() {
+    try {
+        var whatsappPhone = "260760678894"; // TODO: replace with your number, no + or dashes
+        var defaultMessage = "Hello MCM Photography, I'd like to book a session. My preferred date is: ";
+        var els = document.querySelectorAll('.whatsapp-float');
+        if (!whatsappPhone) return;
+
+        // helper: small confirmation toast
+        function showConfirmation(text) {
+            var id = 'wa-confirm-toast';
+            var el = document.getElementById(id);
+            if (!el) {
+                el = document.createElement('div');
+                el.id = id;
+                el.className = 'whatsapp-confirm';
+                document.body.appendChild(el);
+            }
+            el.textContent = text;
+            el.classList.add('show');
+            if (el._timeout) clearTimeout(el._timeout);
+            el._timeout = setTimeout(function() {
+                el.classList.remove('show');
+            }, 2200);
+        }
+
+        // Configure floating whatsapp anchors if present
+        if (els && els.length) {
+            els.forEach(function(el) {
+                var extra = el.getAttribute('data-text') || '';
+                var msg = encodeURIComponent(defaultMessage + extra);
+                var url = 'https://wa.me/' + whatsappPhone + '?text=' + msg;
+                el.setAttribute('href', url);
+                el.setAttribute('target', '_blank');
+                el.setAttribute('rel', 'noopener noreferrer');
+
+                // show confirmation then open (so user sees feedback)
+                el.addEventListener('click', function(ev) {
+                    // allow ctrl/cmd+click to open in new tab normally
+                    if (ev.metaKey || ev.ctrlKey) return;
+                    ev.preventDefault();
+                    showConfirmation('Opening WhatsApp...');
+                    setTimeout(function() {
+                        window.open(url, '_blank', 'noopener');
+                    }, 350);
+                });
+            });
+        }
+
+        // Wire package-level booking buttons (elements with class `whatsapp-book`)
+        var bookButtons = document.querySelectorAll('.whatsapp-book');
+        if (bookButtons && bookButtons.length) {
+            bookButtons.forEach(function(btn) {
+                btn.addEventListener('click', function(ev) {
+                    ev.preventDefault();
+                    var pkg = btn.getAttribute('data-package') || '';
+                    var msg = defaultMessage + '\nPackage: ' + pkg + '\nPreferred date: ';
+                    var url = 'https://wa.me/' + whatsappPhone + '?text=' + encodeURIComponent(msg);
+                    showConfirmation('Opening WhatsApp — ' + pkg);
+                    setTimeout(function() {
+                        window.open(url, '_blank', 'noopener');
+                    }, 350);
+                });
+            });
+        }
+    } catch (e) {
+        console && console.error && console.error('WhatsApp button setup error', e);
+    }
+})();
