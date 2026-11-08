@@ -41,12 +41,15 @@
         return false;
     });
     // Facts counter
-    $('[data-toggle="counter-up"]').counterUp({
-        delay: 10,
-        time: 2000
-    });
+    if ($.fn.counterUp && $('[data-toggle="counter-up"]').length) {
+        $('[data-toggle="counter-up"]').counterUp({
+            delay: 10,
+            time: 2000
+        });
+    }
     // Testimonials carousel
-    $(".testimonial-carousel").owlCarousel({
+    if ($.fn.owlCarousel && $(".testimonial-carousel").length) {
+        $(".testimonial-carousel").owlCarousel({
         autoplay: false,
         smartSpeed: 1000,
         margin: 25,
@@ -69,15 +72,16 @@
                 items: 3
             }
         }
-    });
+        });
+    }
 })(jQuery);
 /* WhatsApp booking links */
 (function() {
-    var whatsappPhone = "260760678894";
+    var whatsappPhone = "27825344850";
     var defaultMessage = "Hello MCM Photography, I'd like to book a session. My preferred date is: ";
     document.querySelectorAll('.whatsapp-float').forEach(function(link) {
         var extra = link.getAttribute('data-text') || '';
-        var message = encodeURIComponent(defaultMessage + extra);
+        var message = encodeURIComponent(extra || defaultMessage);
         link.href = 'https://wa.me/' + whatsappPhone + '?text=' + message;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
@@ -94,15 +98,21 @@
         contactForm.addEventListener('submit', function(event) {
             event.preventDefault();
             var formData = new FormData(contactForm);
-            var subject = formData.get('subject').toString();
-            var body = [
+            var message = [
+                'Hello MCM Photography, I would like to enquire about a session.',
+                '',
                 'Name: ' + formData.get('name'),
                 'Email: ' + formData.get('email'),
+                'Subject: ' + formData.get('subject'),
                 '',
                 formData.get('message')
             ].join('\n');
-            window.location.href = 'mailto:mcmphotographyct@gmail.com?subject=' +
-                encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+            if (event.submitter && event.submitter.value === 'email') {
+                window.location.href = 'mailto:mcmphotographyct@gmail.com?subject=' +
+                    encodeURIComponent(formData.get('subject')) + '&body=' + encodeURIComponent(message);
+                return;
+            }
+            window.location.href = 'https://wa.me/' + whatsappPhone + '?text=' + encodeURIComponent(message);
         });
     }
 })();

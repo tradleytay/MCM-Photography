@@ -22,7 +22,7 @@
     <link href="lib/lightbox/css/lightbox.min.css" rel="stylesheet">
     <!-- Developed Bootstrap Stylesheet -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-    <!-- Template Stylesheet -->
+    <!-- Main Stylesheet -->
     <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
@@ -35,6 +35,7 @@
     <nav class="navbar navbar-expand-lg bg-white navbar-light fixed-top shadow py-lg-0 px-4 px-lg-5 wow fadeIn" data-wow-delay="0.1s">
         <a href="index.html" class="navbar-brand d-block d-lg-none">
             <img src="img/logo.png" alt="MCM Photography" style="max-height: 60px;">
+            <span class="navbar-brand-text">MCM PHOTOGRAPHY</span>
         </a>
         <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
             <span class="navbar-toggler-icon"></span>
@@ -46,7 +47,7 @@
                 <a href="portfolio.html" class="nav-item nav-link">Gallery</a>
             </div>
             <a href="index.html" class="navbar-brand bg-primary py-2 px-4 mx-3 d-none d-lg-block">
-                <h1 class="text-white">MCM PHOTOGRAPHY</h1>
+                <span class="h1 text-white mb-0">MCM PHOTOGRAPHY</span>
             </a>
             <div class="navbar-nav me-auto py-0">
                 <a href="contact.html" class="nav-item nav-link">Contact</a>
@@ -54,63 +55,35 @@
         </div>
     </nav>
     <!-- Navbar End -->
-    <!-- Header Start -->
-    <div class="container-fluid hero-header bg-light py-5 mb-5">
-        <div class="container py-5">
-            <div class="row g-5 align-items-center">
-                <div class="col-lg-6">
-                    <h1 class="display-4 mb-3 animated slideInDown">404 Page</h1>
-                    <nav aria-label="breadcrumb animated slideInDown">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Page Not Found</li>
-                        </ol>
-                    </nav>
-                </div>
-                <div class="col-lg-6 animated fadeIn">
-                    <div class="row g-3">
-                        <div class="col-6 text-end">
-                            <img class="img-fluid bg-white p-3 w-100" src="img/hero-1.jpg" alt="">
-                        </div>
-                        <div class="col-6">
-                            <img class="img-fluid bg-white p-3 w-100" src="img/hero-2.jpg" alt="">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Header End -->
     <!-- 404 Start -->
-    <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
+    <main class="container-xxl error-page py-5 wow fadeInUp" data-wow-delay="0.1s">
         <div class="container text-center">
             <div class="row justify-content-center">
                 <div class="col-lg-6">
                     <i class="bi bi-exclamation-triangle display-1 text-primary"></i>
-                    <h1 class="display-1">404</h1>
+                    <p class="display-1" aria-hidden="true">404</p>
                     <h1 class="mb-4">Page Not Found</h1>
-                    <p class="mb-4">The page you’re looking for may have moved or no longer exists. Visit our homepage to explore our photography services and gallery.</p>
+                    <p class="mb-4">The page you are looking for may have moved or no longer exists. Please return to our homepage to explore our services, portfolio, and bespoke photography offerings.</p>
                     <a class="btn btn-primary py-3 px-5" href="index.html">Return to Home</a>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
     <!-- 404 End -->
     <!-- Footer Start -->
     <div class="container-fluid footer position-relative bg-dark text-white-50 mt-5 py-5 px-4 px-lg-5 wow fadeIn" data-wow-delay="0.1s">
         <div class="row g-5 py-5">
             <div class="col-lg-6 pe-lg-5">
                 <a href="index.html" class="navbar-brand">
-                    <h1 class="display-5 text-primary">MCM PHOTOGRAPHY</h1>
+                    <span class="display-5 text-primary">MCM PHOTOGRAPHY</span>
                 </a>
                 <p>Photography for weddings, portraits, events and the moments worth remembering.</p>
-                <p><i class="fa fa-map-marker-alt me-2"></i>Saxon Sea, Atlantis, Cape Town, South Africa</p>
-                <p><i class="fa fa-phone-alt me-2"></i><a href="tel:+27825344850">+27 82 534 4850</a></p>
-                <p><i class="fa fa-phone-alt me-2"></i><a href="tel:+27656306678">+27 65 630 6678</a></p>
-                <p><i class="fa fa-envelope me-2"></i><a href="mailto:mcmphotographyct@gmail.com">mcmphotographyct@gmail.com</a></p>
-                <div class="d-flex justify-content-start mt-4">
-                    <a class="btn btn-square btn-outline-primary rounded-circle me-2" href="https://www.facebook.com/MrCameraManZone" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                </div>
+                <address>
+                    <p><i class="fa fa-map-marker-alt me-2"></i>Saxon Sea, Atlantis, Cape Town, South Africa</p>
+                    <p><i class="fa fa-phone-alt me-2"></i><a href="tel:+27825344850">+27 82 534 4850</a></p>
+                    <p><i class="fa fa-phone-alt me-2"></i><a href="tel:+27685414901">+27 68 541 4901</a></p>
+                    <p><i class="fa fa-envelope me-2"></i><a href="mailto:mcmphotographyct@gmail.com">mcmphotographyct@gmail.com</a></p>
+                </address>
             </div>
             <div class="col-lg-6 ps-lg-5">
                 <div class="row g-5">
@@ -134,7 +107,6 @@
                 <p class="mb-0">&copy; <a class="text-primary" href="https://mcmphotographyct.com">MCM Photography</a>. All Rights Reserved.</p>
             </div>
             <div class="py-4 px-5 bg-secondary footer-shape position-relative text-center text-md-end">
-                <!--/*** This template is free as long as you keep the footer author’s credit link/attribution link/backlink. If you'd like to use the template without the footer author’s credit link/attribution link/backlink, you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". Thank you for your support. ***/-->
                 <p class="mb-0">Developed by <a class="text-primary fw-bold" href="https://digitalextravagance.com">Digital Extravagance</a></p>
             </div>
         </div>
@@ -151,7 +123,7 @@
     <script src="lib/counterup/counterup.min.js"></script>
     <script src="lib/owlcarousel/owl.carousel.min.js"></script>
     <script src="lib/lightbox/js/lightbox.min.js"></script>
-    <!-- Template Javascript -->
+    <!-- Main Javascript -->
     <script src="js/main.js"></script>
 </body>
 </html>
