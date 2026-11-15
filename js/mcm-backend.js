@@ -147,6 +147,13 @@
 
     const admin = Object.freeze({
         signIn: adminSignIn,
+        setPassword: async function (password) {
+            const result = await getClient().auth.updateUser({ password: password });
+            if (result.error) {
+                raise(result.error, 'Unable to set the administrator password.');
+            }
+            return result.data.user;
+        },
         signOut: async function () {
             const result = await getClient().auth.signOut();
             if (result.error) {

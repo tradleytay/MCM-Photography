@@ -495,7 +495,9 @@
                 submit.disabled = false;
             }
         });
-        content.appendChild(form);
+        const passwordLink = element('a', 'backend-password-link', 'Have an invitation? Set your password');
+        passwordLink.href = 'set-password.html';
+        content.append(form, passwordLink);
     }
 
     async function initialize() {

@@ -1493,6 +1493,17 @@ input[type="range"].field-control {
     gap: 10px;
 }
 
+.backend-form[hidden] {
+    display: none;
+}
+
+.backend-password-link {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--admin-bronze);
+    font-size: 13px;
+}
+
 .backend-form label {
     margin-top: 8px;
     color: var(--admin-ink);

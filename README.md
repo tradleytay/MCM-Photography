@@ -42,7 +42,12 @@ The Supabase CLI and local database runtime are not required to browse the site,
 
    Supabase supplies the project URL and server keys to deployed functions. The code accepts either legacy `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` or the current `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY` environment names.
 5. Deploy `parent-access`, `parent-gallery`, `parent-end-session` and `admin-set-learner-pin` with `supabase functions deploy <function-name>`.
-6. In Supabase Auth, invite the first administrator. In the SQL Editor, assign the trusted role to that invited user's UUID:
+6. In Supabase Auth > URL Configuration, set the Site URL to `https://mcm-photography.vercel.app/admin/set-password.html` and add these Redirect URLs:
+   - `https://mcm-photography.vercel.app/admin/set-password.html`
+   - `https://mcm-photography.vercel.app/admin/dashboard.html`
+
+   This lets an invitation open the password-setup page; after the password is saved, the user is sent to the admin dashboard. If changing these settings after an invitation was sent, resend the invitation so its link uses the new destination.
+7. Invite the first administrator in Supabase Auth. In the SQL Editor, assign the trusted role to that invited user's UUID:
 
    ```sql
    update auth.users
@@ -51,7 +56,7 @@ The Supabase CLI and local database runtime are not required to browse the site,
    ```
 
    The administrator must sign in again after this change so the refreshed Auth token contains the role. Do not allow public admin registration.
-7. Sign in at `/admin/dashboard.html`, create schools/projects/classes/learners, set each learner's 6–12 digit PIN, upload photos, and publish photos only when ready.
+8. Accept the invitation, set a password at `/admin/set-password.html`, then sign in at `/admin/dashboard.html`. Create schools/projects/classes/learners, set each learner's 6–12 digit PIN, upload photos, and publish photos only when ready.
 
 Use the Supabase Dashboard to inspect migration results and Auth users. Test with non-production learner data first. The parent access code and PIN are checked only in Edge Functions; PIN hashes, sessions and rate-limit records are not readable by browser users. Photo storage is private; gallery links are short-lived.
 
