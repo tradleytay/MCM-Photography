@@ -8,12 +8,12 @@
     <meta name="description" content="Services — MCM Photography offers wedding photography, portrait sessions, events coverage and commercial photography services in Cape Town.">
     <meta name="keywords" content="services, wedding photography, portrait sessions, event photography, commercial photography">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://mcmphotographyct.com/service.html">
+    <link rel="canonical" href="https://mcmphotographyct.com/public/service.html">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Services — MCM Photography">
     <meta property="og:description" content="Professional wedding, portrait, event and commercial photography services — learn more about our packages and availability.">
     <meta property="og:image" content="https://mcmphotographyct.com/img/service-1.jpg">
-    <meta property="og:url" content="https://mcmphotographyct.com/service.html">
+    <meta property="og:url" content="https://mcmphotographyct.com/public/service.html">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Services — MCM Photography">
     <meta name="twitter:description" content="Professional wedding, portrait, event and commercial photography services.">
@@ -24,10 +24,10 @@
 
     <!-- favicons
     ================================================== -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+    <link rel="manifest" href="./site.webmanifest">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,21 +39,26 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Libraries Stylesheet -->
-    <link href="lib/animate/animate.min.css" rel="stylesheet">
-    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-    <link href="lib/lightbox/css/lightbox.min.css" rel="stylesheet">
+    <link href="./lib/animate/animate.min.css" rel="stylesheet">
+    <link href="./lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="./lib/lightbox/css/lightbox.min.css" rel="stylesheet">
 
     <!-- Developed Bootstrap Stylesheet -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Template Stylesheet -->
-    <link href="css/style.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
 </head>
 
 <body>
     <!-- Spinner Start -->
-    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-grow text-primary" role="status"></div>
+    <div id="spinner" class="show" role="status" aria-live="polite" aria-label="Loading MCM Photography">
+        <div class="preloader-panel">
+            <img class="preloader-logo" src="./img/logo.png" alt="">
+            <span class="preloader-brand">MCM Photography</span>
+            <div class="preloader-progress" aria-hidden="true"><span></span></div>
+            <p class="preloader-message">Preparing your experience</p>
+        </div>
     </div>
     <!-- Spinner End -->
 
@@ -64,7 +69,7 @@
         <!-- Navbar Start -->
         <nav class="navbar navbar-expand-lg bg-white navbar-light fixed-top shadow py-lg-0 px-4 px-lg-5 wow fadeIn" data-wow-delay="0.2s">
             <a href="index.html" class="navbar-brand d-block d-lg-none">
-                <img src="img/logo.png" alt="MCM Photography Logo" style="max-height: 60px;" class="me-2">
+                <img src="./img/logo.png" alt="MCM Photography Logo" style="max-height: 60px;" class="me-2">
                 <span class="navbar-brand-text">MCM PHOTOGRAPHY</span>
             </a>
             <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -74,13 +79,15 @@
                 <div class="navbar-nav ms-auto py-0">
                     <a href="index.html" class="nav-item nav-link">Home</a>
                     <a href="about.html" class="nav-item nav-link">About</a>
+                    <a href="service.html" class="nav-item nav-link active">Services</a>
                 </div>
                 <a href="index.html" class="navbar-brand bg-primary py-2 px-4 mx-3 d-none d-lg-block d-flex align-items-center">           
                     <span class="h1 text-white mb-0">MCM PHOTOGRAPHY</span>
                 </a>
-                <div class="navbar-nav me-auto py-0">
+                <div class="navbar-nav me-auto py-0 align-items-center gap-2">
                     <a href="portfolio.html" class="nav-item nav-link">Gallery</a>
-                    <a href="contact.html" class="nav-item nav-link">Get In Touch</a>
+                    <a href="contact.html" class="nav-item nav-link">Contact</a>
+                    <a href="contact.html#book" class="btn btn-primary book-session-btn">Book a Session</a>
                 </div>
             </div>
         </nav>
@@ -96,7 +103,7 @@
                 <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
                     <div class="service-item d-flex flex-column bg-white p-3 pb-0">
                         <div class="position-relative">
-                            <img class="img-fluid" src="img/service-1.jpg" alt="">
+                            <img class="img-fluid" src="./img/service-1.jpg" alt="">
                             <div class="service-overlay">
                                 <a class="btn btn-lg-square btn-outline-light rounded-circle" href="service-metric.html"><i class="fa fa-link text-primary"></i></a>
                             </div>
@@ -110,7 +117,7 @@
                 <div class="col-lg-3 col-md-6 pt-lg-5 wow fadeInUp" data-wow-delay="0.2s">
                     <div class="service-item d-flex flex-column bg-white p-3 pb-0">
                         <div class="position-relative">
-                            <img class="img-fluid" src="img/service-2.jpg" alt="">
+                            <img class="img-fluid" src="./img/service-2.jpg" alt="">
                             <div class="service-overlay">
                                 <a class="btn btn-lg-square btn-outline-light rounded-circle" href="service-weddings.html"><i class="fa fa-link text-primary"></i></a>
                             </div>
@@ -124,7 +131,7 @@
                 <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
                     <div class="service-item d-flex flex-column bg-white p-3 pb-0">
                         <div class="position-relative">
-                            <img class="img-fluid" src="img/service-3.jpg" alt="">
+                            <img class="img-fluid" src="./img/service-3.jpg" alt="">
                             <div class="service-overlay">
                                 <a class="btn btn-lg-square btn-outline-light rounded-circle" href="service-portraits.html"><i class="fa fa-link text-primary"></i></a>
                             </div>
@@ -138,7 +145,7 @@
                 <div class="col-lg-3 col-md-6 pt-lg-5 wow fadeInUp" data-wow-delay="0.4s">
                     <div class="service-item d-flex flex-column bg-white p-3 pb-0">
                         <div class="position-relative">
-                            <img class="img-fluid" src="img/service-4.jpg" alt="">
+                            <img class="img-fluid" src="./img/service-4.jpg" alt="">
                             <div class="service-overlay">
                                 <a class="btn btn-lg-square btn-outline-light rounded-circle" href="service-fashion.html"><i class="fa fa-link text-primary"></i></a>
                             </div>                            
@@ -175,6 +182,12 @@
                     <p><i class="fa fa-phone-alt me-2"></i><a href="tel:+27 65 630 6678" class="text-white-50">+27 65 630 6678</a></p>
                     <p><i class="fa fa-envelope me-2"></i><a href="mailto:mcmphotographyct@gmail.com" class="text-white-50">mcmphotographyct@gmail.com</a></p>
                 </address>
+
+                <div class="social-links mt-4">
+                    <a href="https://instagram.com" class="text-white-50 me-3" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="https://facebook.com" class="text-white-50 me-3" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://pinterest.com" class="text-white-50" target="_blank" rel="noopener noreferrer" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
+                </div>
 
             </div>
 
@@ -226,15 +239,15 @@
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="lib/wow/wow.min.js"></script>
-    <script src="lib/easing/easing.min.js"></script>
-    <script src="lib/waypoints/waypoints.min.js"></script>
-    <script src="lib/counterup/counterup.min.js"></script>
-    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
-    <script src="lib/lightbox/js/lightbox.min.js"></script>
+    <script src="./lib/wow/wow.min.js"></script>
+    <script src="./lib/easing/easing.min.js"></script>
+    <script src="./lib/waypoints/waypoints.min.js"></script>
+    <script src="./lib/counterup/counterup.min.js"></script>
+    <script src="./lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="./lib/lightbox/js/lightbox.min.js"></script>
 
     <!-- Template Javascript -->
-    <script src="js/main.js"></script>
+    <script src="./js/main.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>MCM Admin</title>
+    <meta name="description" content="MCM Photography administrator access.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+    <link href="assets/admin-dashboard.css" rel="stylesheet">
+</head>
+<body class="admin-page">
+    <main class="backend-panel">
+        <a class="backend-brand" href="../index.html">
+            <img src="../img/logo.png" alt="">
+            <span>MCM Photography</span>
+        </a>
+        <section class="backend-card" aria-labelledby="admin-title">
+            <p class="eyebrow">ADMINISTRATION</p>
+            <h1 id="admin-title">Admin access</h1>
+            <div id="admin-content" aria-live="polite">
+                <p>Checking backend configuration…</p>
+            </div>
+            <p id="admin-status" class="backend-status" role="status" aria-live="polite"></p>
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="../js/backend-config.js" defer></script>
+    <script src="../js/mcm-backend.js" defer></script>
+    <script src="assets/admin-dashboard.js" defer></script>
+</body>
+</html>

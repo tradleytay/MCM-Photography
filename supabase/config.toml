@@ -1,0 +1,29 @@
+project_id = "mcm-photography"
+
+[api]
+enabled = true
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+major_version = 15
+
+[db.seed]
+enabled = false
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+[functions.parent-access]
+verify_jwt = false
+
+[functions.parent-gallery]
+verify_jwt = false
+
+[functions.parent-end-session]
+verify_jwt = false
+
+[functions.admin-set-learner-pin]
+verify_jwt = false

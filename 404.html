@@ -27,8 +27,13 @@
 </head>
 <body>
     <!-- Spinner Start -->
-    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-grow text-primary" role="status"></div>
+    <div id="spinner" class="show" role="status" aria-live="polite" aria-label="Loading MCM Photography">
+        <div class="preloader-panel">
+            <img class="preloader-logo" src="img/logo.png" alt="">
+            <span class="preloader-brand">MCM Photography</span>
+            <div class="preloader-progress" aria-hidden="true"><span></span></div>
+            <p class="preloader-message">Preparing your experience</p>
+        </div>
     </div>
     <!-- Spinner End -->
     <!-- Navbar Start -->
@@ -45,6 +50,7 @@
                 <a href="index.html" class="nav-item nav-link">Home</a>
                 <a href="about.html" class="nav-item nav-link">About</a>
                 <a href="portfolio.html" class="nav-item nav-link">Gallery</a>
+                <a href="school-photography.html" class="nav-item nav-link">School Photography</a>
             </div>
             <a href="index.html" class="navbar-brand bg-primary py-2 px-4 mx-3 d-none d-lg-block">
                 <span class="h1 text-white mb-0">MCM PHOTOGRAPHY</span>

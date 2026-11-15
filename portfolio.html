@@ -8,12 +8,12 @@
     <meta name="description" content="Portfolio — Explore MCM Photography's curated gallery of weddings, portraits, fashion and event photography. See examples of our style and past work.">
     <meta name="keywords" content="portfolio, gallery, photography portfolio, wedding photos, portrait photos">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://mcmphotographyct.com/portfolio.html">
+    <link rel="canonical" href="https://mcmphotographyct.com/public/portfolio.html">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Portfolio — MCM Photography">
     <meta property="og:description" content="Explore our gallery of weddings, portraits, fashion and event photography — MCM Photography.">
     <meta property="og:image" content="https://mcmphotographyct.com/img/portfolio-1.jpg">
-    <meta property="og:url" content="https://mcmphotographyct.com/portfolio.html">
+    <meta property="og:url" content="https://mcmphotographyct.com/public/portfolio.html">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Portfolio — MCM Photography">
     <meta name="twitter:description" content="Explore our gallery of weddings, portraits, fashion and event photography.">
@@ -24,10 +24,10 @@
 
     <!-- favicons
     ================================================== -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+    <link rel="manifest" href="./site.webmanifest">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,21 +39,26 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Libraries Stylesheet -->
-    <link href="lib/animate/animate.min.css" rel="stylesheet">
-    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-    <link href="lib/lightbox/css/lightbox.min.css" rel="stylesheet">
+    <link href="./lib/animate/animate.min.css" rel="stylesheet">
+    <link href="./lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="./lib/lightbox/css/lightbox.min.css" rel="stylesheet">
 
     <!-- Developed Bootstrap Stylesheet -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Template Stylesheet -->
-    <link href="css/style.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
 </head>
 
 <body>
     <!-- Spinner Start -->
-    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-grow text-primary" role="status"></div>
+    <div id="spinner" class="show" role="status" aria-live="polite" aria-label="Loading MCM Photography">
+        <div class="preloader-panel">
+            <img class="preloader-logo" src="./img/logo.png" alt="">
+            <span class="preloader-brand">MCM Photography</span>
+            <div class="preloader-progress" aria-hidden="true"><span></span></div>
+            <p class="preloader-message">Preparing your experience</p>
+        </div>
     </div>
     <!-- Spinner End -->
 
@@ -61,7 +66,7 @@
     <!-- Navbar Start -->
     <nav class="navbar navbar-expand-lg bg-white navbar-light fixed-top shadow py-lg-0 px-4 px-lg-5 wow fadeIn" data-wow-delay="0.2s">
         <a href="index.html" class="navbar-brand d-block d-lg-none">
-            <img src="img/logo.png" alt="MCM Photography Logo" style="max-height: 60px;" class="me-2">
+            <img src="./img/logo.png" alt="MCM Photography Logo" style="max-height: 60px;" class="me-2">
             <span class="navbar-brand-text">MCM PHOTOGRAPHY</span>
         </a>
         <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -71,14 +76,16 @@
             <div class="navbar-nav ms-auto py-0">
                 <a href="index.html" class="nav-item nav-link">Home</a>
                 <a href="about.html" class="nav-item nav-link">About</a>
+            <a href="service.html" class="nav-item nav-link">Services</a>
             </div>
             <a href="index.html" class="navbar-brand bg-primary py-2 px-4 mx-3 d-none d-lg-block d-flex align-items-center">
-                <img src="img/logo.png" alt="MCM Photography Logo" style="max-height: 40px;" class="">
+                <img src="./img/logo.png" alt="MCM Photography Logo" style="max-height: 40px;" class="">
                 <span class="h1 text-white mb-0">MCM Photography</span>
             </a>
-            <div class="navbar-nav me-auto py-0">
-                <a href="service.html" class="nav-item nav-link">Services</a>
-                <a href="contact.html" class="nav-item nav-link">Get In Touch</a>
+        <div class="navbar-nav me-auto py-0 align-items-center gap-2">
+            <a href="portfolio.html" class="nav-item nav-link active">Gallery</a>
+            <a href="contact.html" class="nav-item nav-link">Contact</a>
+            <a href="contact.html#book" class="btn btn-primary book-session-btn">Book a Session</a>
             </div>
         </div>
     </nav>
@@ -90,73 +97,77 @@
         <div class="container-xxl py-5">
             <div class="container">
                 <div class="page-intro text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s">
-                    <h1 class="display-6 mb-0">Discover Our Unique And Creative Photoshoot</h1>
+                    <p class="text-primary text-uppercase mb-2">Our Gallery</p>
+                    <h1 class="display-6 mb-0">A curated look at the stories we love to tell.</h1>
                 </div>
-                <div class="row g-3">
-                    <!-- Column 1 -->
-                    <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="portfolio-item">
-                                    <img class="img-fluid" src="img/portfolio-5.jpg" alt="ms">
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="portfolio-item">
-                                    <img class="img-fluid" src="img/portfolio-1.jpg" alt="wed">
-                                </div>
-                            </div>
+
+                <div class="gallery-filters wow fadeInUp" data-wow-delay="0.1s">
+                    <button class="gallery-filter is-active" type="button" data-filter="all">All</button>
+                    <button class="gallery-filter" type="button" data-filter="weddings">Weddings</button>
+                    <button class="gallery-filter" type="button" data-filter="portraits">Portraits</button>
+                    <button class="gallery-filter" type="button" data-filter="events">Events</button>
+                    <button class="gallery-filter" type="button" data-filter="creative">Creative</button>
+                </div>
+
+                <div class="row g-3 gallery-grid">
+                    <div class="col-lg-3 col-md-6 gallery-item wow fadeInUp" data-category="weddings" data-wow-delay="0.1s" data-image="../img/portfolio-1.jpg" data-title="Wedding Story">
+                        <div class="portfolio-item">
+                            <img class="img-fluid" src="./img/portfolio-1.jpg" alt="Wedding portrait">
                         </div>
                     </div>
-                    <!-- Column 2 -->
-                    <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.2s">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="portfolio-item">
-                                    <img class="img-fluid" src="img/portfolio-2.jpg" alt="pot">
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="portfolio-item">
-                                    <img class="img-fluid" src="img/portfolio-6.jpg" alt="fash">
-                                </div>
-                            </div>
+                    <div class="col-lg-3 col-md-6 gallery-item wow fadeInUp" data-category="portraits" data-wow-delay="0.2s" data-image="../img/portfolio-2.jpg" data-title="Editorial Portrait">
+                        <div class="portfolio-item">
+                            <img class="img-fluid" src="./img/portfolio-2.jpg" alt="Editorial portrait">
                         </div>
                     </div>
-                    <!-- Column 3 -->
-                    <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="portfolio-item">
-                                    <img class="img-fluid" src="img/portfolio-7.jpg" alt="mat">
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="portfolio-item">
-                                    <img class="img-fluid" src="img/portfolio-3.jpg" alt="eve">
-                                </div>
-                            </div>
+                    <div class="col-lg-3 col-md-6 gallery-item wow fadeInUp" data-category="creative" data-wow-delay="0.3s" data-image="../img/portfolio-3.jpg" data-title="Fashion Session">
+                        <div class="portfolio-item">
+                            <img class="img-fluid" src="./img/portfolio-3.jpg" alt="Fashion session">
                         </div>
                     </div>
-                    <!-- Column 4 -->
-                    <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.7s">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="portfolio-item">
-                                    <img class="img-fluid" src="img/portfolio-4.jpg" alt="birth">
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="portfolio-item">
-                                    <img class="img-fluid" src="img/portfolio-8.jpg" alt="stud">
-                                </div>
-                            </div>
+                    <div class="col-lg-3 col-md-6 gallery-item wow fadeInUp" data-category="events" data-wow-delay="0.4s" data-image="../img/portfolio-4.jpg" data-title="Event Coverage">
+                        <div class="portfolio-item">
+                            <img class="img-fluid" src="./img/portfolio-4.jpg" alt="Event coverage">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 gallery-item wow fadeInUp" data-category="events" data-wow-delay="0.1s" data-image="../img/portfolio-5.jpg" data-title="Celebration Detail">
+                        <div class="portfolio-item">
+                            <img class="img-fluid" src="./img/portfolio-5.jpg" alt="Celebration detail">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 gallery-item wow fadeInUp" data-category="creative" data-wow-delay="0.2s" data-image="../img/portfolio-6.jpg" data-title="Creative Composition">
+                        <div class="portfolio-item">
+                            <img class="img-fluid" src="./img/portfolio-6.jpg" alt="Creative composition">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 gallery-item wow fadeInUp" data-category="weddings" data-wow-delay="0.3s" data-image="../img/portfolio-7.jpg" data-title="Couple Portrait">
+                        <div class="portfolio-item">
+                            <img class="img-fluid" src="./img/portfolio-7.jpg" alt="Couple portrait">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 gallery-item wow fadeInUp" data-category="portraits" data-wow-delay="0.4s" data-image="../img/portfolio-8.jpg" data-title="Family Portrait">
+                        <div class="portfolio-item">
+                            <img class="img-fluid" src="./img/portfolio-8.jpg" alt="Family portrait">
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
+    <div class="modal fade gallery-modal" id="galleryLightbox" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="galleryLightboxTitle">Photo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="galleryLightboxImage" src="" alt="Selected MCM Photography work">
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Portfolio Section End -->
 
@@ -181,6 +192,12 @@
                     <p><i class="fa fa-phone-alt me-2"></i><a href="tel:+27 65 630 6678" class="text-white-50">+27 65 630 6678</a></p>
                     <p><i class="fa fa-envelope me-2"></i><a href="mailto:mcmphotographyct@gmail.com" class="text-white-50">mcmphotographyct@gmail.com</a></p>
                 </address>
+
+                <div class="social-links mt-4">
+                    <a href="https://instagram.com" class="text-white-50 me-3" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="https://facebook.com" class="text-white-50 me-3" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://pinterest.com" class="text-white-50" target="_blank" rel="noopener noreferrer" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
+                </div>
 
             </div>
 
@@ -230,15 +247,15 @@
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="lib/wow/wow.min.js"></script>
-    <script src="lib/easing/easing.min.js"></script>
-    <script src="lib/waypoints/waypoints.min.js"></script>
-    <script src="lib/counterup/counterup.min.js"></script>
-    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
-    <script src="lib/lightbox/js/lightbox.min.js"></script>
+    <script src="./lib/wow/wow.min.js"></script>
+    <script src="./lib/easing/easing.min.js"></script>
+    <script src="./lib/waypoints/waypoints.min.js"></script>
+    <script src="./lib/counterup/counterup.min.js"></script>
+    <script src="./lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="./lib/lightbox/js/lightbox.min.js"></script>
 
     <!-- Template Javascript -->
-    <script src="js/main.js"></script>
+    <script src="./js/main.js"></script>
 </body>
 
 </html>

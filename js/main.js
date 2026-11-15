@@ -1,14 +1,32 @@
 (function($) {
     "use strict";
-    // Spinner
-    var spinner = function() {
-        setTimeout(function() {
-            if ($('#spinner').length > 0) {
-                $('#spinner').removeClass('show');
+    var spinner = document.getElementById('spinner');
+    if (spinner) {
+        var spinnerStartedAt = Date.now();
+        var hideScheduled = false;
+        var hideSpinner = function() {
+            if (hideScheduled) {
+                return;
             }
-        }, 1);
-    };
-    spinner();
+            hideScheduled = true;
+            var minimumVisibleTime = 350;
+            var wait = Math.max(0, minimumVisibleTime - (Date.now() - spinnerStartedAt));
+            window.setTimeout(function() {
+                spinner.classList.remove('show');
+            }, wait);
+        };
+
+        if (document.readyState === 'complete') {
+            hideSpinner();
+        } else {
+            window.addEventListener('load', hideSpinner, { once: true });
+        }
+        window.setTimeout(hideSpinner, 5000);
+    }
+    if (!$) {
+        return;
+    }
+
     // Initiate the wowjs
     new WOW().init();
     // Keep navigation available, with a subtle scrolled state.
@@ -17,6 +35,25 @@
     };
     $(window).on('scroll', updateNavbar);
     updateNavbar();
+
+    $('.gallery-filter').on('click', function() {
+        var filter = $(this).data('filter');
+        $('.gallery-filter').removeClass('is-active');
+        $(this).addClass('is-active');
+        $('.gallery-item').each(function() {
+            var match = filter === 'all' || $(this).data('category') === filter;
+            $(this).toggleClass('is-hidden', !match);
+        });
+    });
+
+    $('.gallery-item').on('click', function() {
+        var image = $(this).data('image');
+        var title = $(this).data('title');
+        $('#galleryLightboxImage').attr('src', image);
+        $('#galleryLightboxTitle').text(title);
+        var modal = new bootstrap.Modal(document.getElementById('galleryLightbox'));
+        modal.show();
+    });
     // Modal Video
     var $videoSrc;
     $('.btn-play').click(function() {
@@ -74,7 +111,7 @@
         }
         });
     }
-})(jQuery);
+})(window.jQuery);
 /* WhatsApp booking links */
 (function() {
     var whatsappPhone = "27825344850";

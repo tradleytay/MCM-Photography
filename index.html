@@ -36,10 +36,10 @@
 
     <!-- favicons
     ================================================== -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+    <link rel="manifest" href="./site.webmanifest">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,21 +51,26 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Libraries Stylesheet -->
-    <link href="lib/animate/animate.min.css" rel="stylesheet">
-    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-    <link href="lib/lightbox/css/lightbox.min.css" rel="stylesheet">
+    <link href="./lib/animate/animate.min.css" rel="stylesheet">
+    <link href="./lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="./lib/lightbox/css/lightbox.min.css" rel="stylesheet">
 
     <!-- Developed Bootstrap Stylesheet -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Template Stylesheet -->
-    <link href="css/style.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
 </head>
 
 <body>
     <!-- Spinner Start -->
-    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-grow text-primary" role="status"></div>
+    <div id="spinner" class="show" role="status" aria-live="polite" aria-label="Loading MCM Photography">
+        <div class="preloader-panel">
+            <img class="preloader-logo" src="./img/logo.png" alt="">
+            <span class="preloader-brand">MCM Photography</span>
+            <div class="preloader-progress" aria-hidden="true"><span></span></div>
+            <p class="preloader-message">Preparing your experience</p>
+        </div>
     </div>
     <!-- Spinner End -->
 
@@ -73,7 +78,7 @@
         <!-- Navbar Start -->
         <nav class="navbar navbar-expand-lg bg-white navbar-light fixed-top shadow py-lg-0 px-4 px-lg-5 wow fadeIn" data-wow-delay="0.2s">
             <a href="index.html" class="navbar-brand d-block d-lg-none">
-                <img src="img/logo.png" alt="MCM Photography Logo" style="max-height: 60px;" class="me-2">
+                <img src="./img/logo.png" alt="MCM Photography Logo" style="max-height: 60px;" class="me-2">
                 <span class="navbar-brand-text">MCM PHOTOGRAPHY</span>
             </a>
             <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -81,6 +86,7 @@
             </button>
             <div class="collapse navbar-collapse justify-content-between py-4 py-lg-0" id="navbarCollapse">
                 <div class="navbar-nav ms-auto py-0">
+                    <a href="index.html" class="nav-item nav-link active">Home</a>
                     <a href="about.html" class="nav-item nav-link">About</a>
                     <a href="service.html" class="nav-item nav-link">Services</a>
                 </div>
@@ -88,9 +94,10 @@
                     <span class="h1 text-white mb-0">MCM PHOTOGRAPHY</span>
                 </a>
 
-                <div class="navbar-nav me-auto py-0">
+                <div class="navbar-nav me-auto py-0 align-items-center gap-2">
                     <a href="portfolio.html" class="nav-item nav-link">Gallery</a>
-                    <a href="contact.html" class="nav-item nav-link">Get In Touch</a>
+                    <a href="contact.html" class="nav-item nav-link">Contact</a>
+                    <a href="contact.html#book" class="btn btn-primary book-session-btn">Book a Session</a>
                 </div>
             </div>
         </nav>
@@ -103,31 +110,23 @@
                 <div class="row g-5 align-items-center">
                     <div class="col-lg-6">
                         <p class="text-primary text-uppercase mb-2 animated slideInDown">MCM Photography · Cape Town</p>
-                        <h1 class="display-4 mb-3 animated slideInDown">Timeless imagery crafted around your story.</h1>
+                        <h1 class="display-4 mb-3 animated slideInDown">Your story, beautifully captured.</h1>
                         <p class="animated slideInDown">We create refined, story-led photography for life’s most meaningful milestones, from elegant weddings and personal portraits to brand storytelling and memorable occasions.</p>
 
-                        <div class="d-flex align-items-center pt-4 animated slideInDown">
-                            <!-- Explore Button -->
-                            <a href="portfolio.html" class="btn btn-primary py-3 px-4 me-5">Explore the portfolio</a>
-
-                            <!-- Play Video Button -->
-                            <button type="button" class="btn-play" data-bs-toggle="modal" data-bs-target="#videoModal" data-src="https://www.youtube.com/embed/aaSY_sV8VhQ">
-                              <span class="play-icon"></span>
-                            </button>
-
-                            <!-- Label -->
-                            <h5 class="ms-4 mb-0 d-none d-sm-block">Watch our film</h5>
+                        <div class="d-flex flex-column flex-sm-row align-items-start gap-3 pt-4 animated slideInDown">
+                            <a href="contact.html#book" class="btn btn-primary py-3 px-4">Book a Session</a>
+                            <a href="portfolio.html" class="btn btn-outline-primary py-3 px-4">Explore Our Work</a>
                         </div>
                     </div>
                     <div class="col-lg-6 animated fadeIn">
                         <div class="row g-3">
                             <div class="col-6 text-end">
-                                <img class="img-fluid bg-white p-3 w-100 mb-3" src="img/hero-1.jpg" alt="A recent MCM Photography portrait">
-                                <img class="img-fluid bg-white p-3 w-50" src="img/hero-3.jpg" alt="A couple sharing a quiet moment">
+                                <img class="img-fluid bg-white p-3 w-100 mb-3" src="./img/hero-1.jpg" alt="A recent MCM Photography portrait">
+                                <img class="img-fluid bg-white p-3 w-50" src="./img/hero-3.jpg" alt="A couple sharing a quiet moment">
                             </div>
                             <div class="col-6">
-                                <img class="img-fluid bg-white p-3 w-50 mb-3" src="img/hero-4.jpg" alt="An expressive editorial portrait">
-                                <img class="img-fluid bg-white p-3 w-100" src="img/hero-2.jpg" alt="A joyful celebration captured by MCM Photography">
+                                <img class="img-fluid bg-white p-3 w-50 mb-3" src="./img/hero-4.jpg" alt="An expressive editorial portrait">
+                                <img class="img-fluid bg-white p-3 w-100" src="./img/hero-2.jpg" alt="A joyful celebration captured by MCM Photography">
                             </div>
                         </div>
                     </div>
@@ -160,10 +159,10 @@
                     <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
                         <div class="row g-3 img-twice position-relative h-100">
                             <div class="col-6">
-                                <img class="img-fluid bg-light p-3" src="img/about-1.jpg" alt="">
+                                <img class="img-fluid bg-light p-3" src="./img/about-1.jpg" alt="">
                             </div>
                             <div class="col-6 align-self-end">
-                                <img class="img-fluid bg-light p-3" src="img/about-2.jpg" alt="">
+                                <img class="img-fluid bg-light p-3" src="./img/about-2.jpg" alt="">
                             </div>
                         </div>
                     </div>
@@ -247,7 +246,7 @@
                     <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
                         <div class="service-item d-flex flex-column bg-white p-3 pb-0">
                             <div class="position-relative">
-                                <img class="img-fluid" src="img/service-1.jpg" alt="">
+                                <img class="img-fluid" src="./img/service-1.jpg" alt="">
                                 <div class="service-overlay">
                                     <a class="btn btn-lg-square btn-outline-light rounded-circle" href="service-metric.html" aria-label="View metric photography services"><i class="fa fa-link text-primary"></i></a>
                                 </div>
@@ -260,7 +259,7 @@
                     <div class="col-lg-3 col-md-6 pt-lg-5 wow fadeInUp" data-wow-delay="0.2s">
                         <div class="service-item d-flex flex-column bg-white p-3 pb-0">
                             <div class="position-relative">
-                                <img class="img-fluid" src="img/service-2.jpg" alt="">
+                                <img class="img-fluid" src="./img/service-2.jpg" alt="">
                                 <div class="service-overlay">
                                     <a class="btn btn-lg-square btn-outline-light rounded-circle" href="service-weddings.html" aria-label="View wedding photography services"><i class="fa fa-link text-primary"></i></a>
                                 </div>
@@ -273,7 +272,7 @@
                     <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
                         <div class="service-item d-flex flex-column bg-white p-3 pb-0">
                             <div class="position-relative">
-                                <img class="img-fluid" src="img/service-3.jpg" alt="">
+                                <img class="img-fluid" src="./img/service-3.jpg" alt="">
                                 <div class="service-overlay">
                                     <a class="btn btn-lg-square btn-outline-light rounded-circle" href="service-portraits.html" aria-label="View portrait photography services"><i class="fa fa-link text-primary"></i></a>
                                 </div>
@@ -286,7 +285,7 @@
                     <div class="col-lg-3 col-md-6 pt-lg-5 wow fadeInUp" data-wow-delay="0.4s">
                         <div class="service-item d-flex flex-column bg-white p-3 pb-0">
                             <div class="position-relative">
-                                <img class="img-fluid" src="img/service-4.jpg" alt="">
+                                <img class="img-fluid" src="./img/service-4.jpg" alt="">
                                 <div class="service-overlay">
                                     <a class="btn btn-lg-square btn-outline-light rounded-circle" href="service-fashion.html" aria-label="View fashion photography services"><i class="fa fa-link text-primary"></i></a>
                                 </div>
@@ -317,7 +316,7 @@
                 <div class="owl-carousel testimonial-carousel wow fadeInUp" data-wow-delay="0.1s">
                     <div class="testimonial-item bg-white p-4">
                         <div class="d-flex align-items-center mb-4">
-                            <img class="flex-shrink-0 rounded-circle border p-1" src="img/testimonial-1.jpg" alt="">
+                            <img class="flex-shrink-0 rounded-circle border p-1" src="./img/testimonial-1.jpg" alt="">
                             <div class="ms-4">
                                 <h5 class="mb-1">Client Name</h5>
                                 <span>Profession</span>
@@ -327,7 +326,7 @@
                     </div>
                     <div class="testimonial-item bg-white p-4">
                         <div class="d-flex align-items-center mb-4">
-                            <img class="flex-shrink-0 rounded-circle border p-1" src="img/testimonial-2.jpg" alt="">
+                            <img class="flex-shrink-0 rounded-circle border p-1" src="./img/testimonial-2.jpg" alt="">
                             <div class="ms-4">
                                 <h5 class="mb-1">Client Name</h5>
                                 <span>Profession</span>
@@ -337,7 +336,7 @@
                     </div>
                     <div class="testimonial-item bg-white p-4">
                         <div class="d-flex align-items-center mb-4">
-                            <img class="flex-shrink-0 rounded-circle border p-1" src="img/testimonial-3.jpg" alt="">
+                            <img class="flex-shrink-0 rounded-circle border p-1" src="./img/testimonial-3.jpg" alt="">
                             <div class="ms-4">
                                 <h5 class="mb-1">Client Name</h5>
                                 <span>Profession</span>
@@ -347,7 +346,7 @@
                     </div>
                     <div class="testimonial-item bg-white p-4">
                         <div class="d-flex align-items-center mb-4">
-                            <img class="flex-shrink-0 rounded-circle border p-1" src="img/testimonial-4.jpg" alt="">
+                            <img class="flex-shrink-0 rounded-circle border p-1" src="./img/testimonial-4.jpg" alt="">
                             <div class="ms-4">
                                 <h5 class="mb-1">Client Name</h5>
                                 <span>Profession</span>
@@ -362,6 +361,43 @@
     Testimonials End -->
 
 
+
+    <section class="container-xxl py-5">
+        <div class="container">
+            <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 700px;">
+                <p class="text-primary text-uppercase mb-2">Featured Portfolio</p>
+                <h2 class="display-6 mb-3">Moments that speak for themselves.</h2>
+            </div>
+            <div class="row g-3 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="col-md-6 col-lg-3">
+                    <div class="portfolio-item"><img class="img-fluid" src="./img/portfolio-1.jpg" alt="Wedding photography"></div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="portfolio-item"><img class="img-fluid" src="./img/portfolio-2.jpg" alt="Portrait photography"></div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="portfolio-item"><img class="img-fluid" src="./img/portfolio-3.jpg" alt="Fashion photography"></div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="portfolio-item"><img class="img-fluid" src="./img/portfolio-4.jpg" alt="Event photography"></div>
+                </div>
+            </div>
+            <div class="text-center mt-4 wow fadeInUp" data-wow-delay="0.3s">
+                <a href="portfolio.html" class="btn btn-outline-primary py-3 px-5">View the Full Gallery</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="container-xxl py-5">
+        <div class="container">
+            <div class="bg-white rounded-4 shadow-sm p-5 text-center wow fadeInUp" data-wow-delay="0.1s">
+                <p class="text-primary text-uppercase mb-2">Book Your Session</p>
+                <h2 class="display-6 mb-3">Let’s create photographs you’ll treasure for a lifetime.</h2>
+                <p class="mx-auto mb-4" style="max-width: 620px;">From weddings and portraits to personal branding and memorable events, MCM Photography is here to capture the details that matter most.</p>
+                <a href="contact.html#book" class="btn btn-primary py-3 px-5">Book a Session</a>
+            </div>
+        </div>
+    </section>
 
    <!-- Footer Start -->
     <footer class="container-fluid footer position-relative bg-dark text-white-50 mt-5 py-5 px-4 px-lg-5 wow fadeIn" data-wow-delay="0.1s" aria-label="Site Footer">
@@ -382,6 +418,12 @@
                     <p><i class="fa fa-phone-alt me-2"></i><a href="tel:+27 65 630 6678" class="text-white-50">+27 65 630 6678</a></p>
                     <p><i class="fa fa-envelope me-2"></i><a href="mailto:mcmphotographyct@gmail.com" class="text-white-50">mcmphotographyct@gmail.com</a></p>
                 </address>
+
+                <div class="social-links mt-4">
+                    <a href="https://instagram.com" class="text-white-50 me-3" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="https://facebook.com" class="text-white-50 me-3" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://pinterest.com" class="text-white-50" target="_blank" rel="noopener noreferrer" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
+                </div>
 
             </div>
 
@@ -430,15 +472,15 @@
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="lib/wow/wow.min.js"></script>
-    <script src="lib/easing/easing.min.js"></script>
-    <script src="lib/waypoints/waypoints.min.js"></script>
-    <script src="lib/counterup/counterup.min.js"></script>
-    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
-    <script src="lib/lightbox/js/lightbox.min.js"></script>
+    <script src="./lib/wow/wow.min.js"></script>
+    <script src="./lib/easing/easing.min.js"></script>
+    <script src="./lib/waypoints/waypoints.min.js"></script>
+    <script src="./lib/counterup/counterup.min.js"></script>
+    <script src="./lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="./lib/lightbox/js/lightbox.min.js"></script>
 
     <!-- Template Javascript -->
-    <script src="js/main.js"></script>
+    <script src="./js/main.js"></script>
 </body>
 
 </html>
