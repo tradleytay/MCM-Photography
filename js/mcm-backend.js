@@ -14,7 +14,17 @@
         bookings: 'bookings',
         orders: 'parent_orders',
         orderItems: 'parent_order_items',
-        audit: 'admin_audit_log'
+        audit: 'admin_audit_log',
+        bookingServices: 'booking_services',
+        studioSettings: 'studio_settings',
+        guardians: 'guardians',
+        learnerGuardians: 'learner_guardians',
+        photoBatches: 'photo_batches',
+        payments: 'order_payments',
+        bookingHistory: 'booking_status_history',
+        orderHistory: 'order_status_history',
+        paymentHistory: 'order_payment_history',
+        downloadRequests: 'photo_download_requests'
     });
     let client;
 
@@ -99,12 +109,14 @@
         if (!result.data.user) {
             throw new Error('Sign in with an administrator account to continue.');
         }
-        if (!result.data.user.app_metadata || result.data.user.app_metadata.role !== 'admin') {
+        if (!result.data.user.app_metadata ||
+            result.data.user.app_metadata.role !== 'admin' ||
+            result.data.user.app_metadata.admin_suspended === true) {
             const signOut = await getClient().auth.signOut();
             if (signOut.error) {
                 raise(signOut.error, 'The account is not an administrator and could not be signed out.');
             }
-            throw new Error('This account does not have the administrator role.');
+            throw new Error('This account is not an active administrator.');
         }
         return result.data.user;
     }
@@ -117,14 +129,29 @@
         if (!result.data.user) {
             return null;
         }
-        if (!result.data.user.app_metadata || result.data.user.app_metadata.role !== 'admin') {
+        if (!result.data.user.app_metadata ||
+            result.data.user.app_metadata.role !== 'admin' ||
+            result.data.user.app_metadata.admin_suspended === true) {
             const signOut = await getClient().auth.signOut();
             if (signOut.error) {
                 raise(signOut.error, 'The account is not an administrator and could not be signed out.');
             }
-            throw new Error('This account does not have the administrator role.');
+            throw new Error('This account is not an active administrator.');
         }
         return result.data.user;
+    }
+
+    async function recordAdminSessionActivity(action) {
+        await requireAdminUser();
+        if (!['ADMIN_LOGIN', 'ADMIN_LOGOUT'].includes(action)) {
+            throw new Error('Unsupported administrator activity.');
+        }
+        const result = await getClient().rpc('record_admin_session_activity', {
+            p_action: action
+        });
+        if (result.error) {
+            raise(result.error, 'Unable to record administrator activity.');
+        }
     }
 
     function tableName(name) {
@@ -139,12 +166,23 @@
         if (result.error) {
             raise(result.error, 'Administrator sign-in failed.');
         }
-        if (!result.data.user.app_metadata || result.data.user.app_metadata.role !== 'admin') {
+        if (!result.data.user.app_metadata ||
+            result.data.user.app_metadata.role !== 'admin' ||
+            result.data.user.app_metadata.admin_suspended === true) {
             const signOut = await getClient().auth.signOut();
             if (signOut.error) {
                 raise(signOut.error, 'The account is not an administrator and could not be signed out.');
             }
-            throw new Error('This account does not have the administrator role.');
+            throw new Error('This account is not an active administrator.');
+        }
+        try {
+            await recordAdminSessionActivity('ADMIN_LOGIN');
+        } catch (error) {
+            const signOut = await getClient().auth.signOut();
+            if (signOut.error) {
+                raise(signOut.error, 'Administrator sign-in could not be audited or safely closed.');
+            }
+            throw error;
         }
         return result.data.user;
     }
@@ -159,10 +197,17 @@
             return result.data.user;
         },
         signOut: async function () {
+            let auditError;
+            try {
+                await recordAdminSessionActivity('ADMIN_LOGOUT');
+            } catch (error) {
+                auditError = error;
+            }
             const result = await getClient().auth.signOut();
             if (result.error) {
                 raise(result.error, 'Administrator sign-out failed.');
             }
+            if (auditError) throw auditError;
         },
         currentUser: requireAdminUser,
         sessionUser: getAdminSessionUser,
@@ -179,6 +224,28 @@
             const result = await getClient().from(tableName(collection)).insert(record).select().single();
             if (result.error) {
                 raise(result.error, 'Unable to create a ' + collection + ' record.');
+            }
+            return result.data;
+        },
+        createMany: async function (collection, records) {
+            await requireAdminUser();
+            if (!Array.isArray(records) || records.length === 0 || records.length > 500) {
+                throw new Error('Provide between 1 and 500 records for a bulk save.');
+            }
+            const result = await getClient().from(tableName(collection)).insert(records).select();
+            if (result.error) {
+                raise(result.error, 'Unable to create ' + collection + ' records.');
+            }
+            return result.data;
+        },
+        upsert: async function (collection, record, conflictColumns) {
+            await requireAdminUser();
+            const result = await getClient().from(tableName(collection))
+                .upsert(record, { onConflict: conflictColumns || 'id' })
+                .select()
+                .single();
+            if (result.error) {
+                raise(result.error, 'Unable to save the ' + collection + ' record.');
             }
             return result.data;
         },
@@ -213,6 +280,52 @@
             }
             return result.data[0];
         },
+        recordPayment: async function (orderId, payment) {
+            await requireAdminUser();
+            const result = await getClient().rpc('admin_record_order_payment', {
+                p_order_id: orderId,
+                p_status: payment.status,
+                p_amount_received_cents: payment.amountReceivedCents,
+                p_payment_reference: payment.paymentReference,
+                p_payment_channel: payment.paymentChannel,
+                p_admin_notes: payment.adminNotes
+            });
+            if (result.error) {
+                raise(result.error, 'Unable to save the payment record.');
+            }
+            return result.data;
+        },
+        revokeLearnerAccess: async function (learnerId) {
+            await requireAdminUser();
+            const result = await getClient().rpc('admin_revoke_learner_sessions', {
+                p_learner_id: learnerId
+            });
+            if (result.error) {
+                raise(result.error, 'Unable to revoke parent gallery access.');
+            }
+            return result.data;
+        },
+        manageAdminUsers: async function (action, details) {
+            await requireAdminUser();
+            if (!['list', 'invite', 'suspend', 'reinstate'].includes(action)) {
+                throw new Error('Unsupported administrator account action.');
+            }
+            return invoke('admin-manage-users', Object.assign({}, details || {}, { action: action }));
+        },
+        reviewDownloadRequest: async function (requestId, approve) {
+            await requireAdminUser();
+            const result = await getClient().rpc('admin_review_photo_download', {
+                p_request_id: requestId,
+                p_approve: Boolean(approve)
+            });
+            if (result.error) {
+                raise(result.error, 'Unable to review the photo download request.');
+            }
+            return result.data;
+        },
+        recordSessionActivity: async function (action) {
+            await recordAdminSessionActivity(action);
+        },
         setLearnerPin: async function (learnerId, pin) {
             await requireAdminUser();
             return invoke('admin-set-learner-pin', { learnerId: learnerId, pin: pin });
@@ -245,6 +358,27 @@
                 photoIds: selection.photoIds,
                 packageIds: selection.packageIds,
                 parentNote: selection.parentNote || ''
+            });
+        },
+        requestPhotoDownload: async function (orderId, photoId) {
+            const accessToken = global.sessionStorage.getItem(parentAccessKey);
+            if (!accessToken) {
+                throw new Error('Access your learner gallery before requesting a photo download.');
+            }
+            return invoke('parent-download-request', {
+                accessToken: accessToken,
+                orderId: orderId,
+                photoId: photoId
+            });
+        },
+        downloadPhoto: async function (requestId) {
+            const accessToken = global.sessionStorage.getItem(parentAccessKey);
+            if (!accessToken) {
+                throw new Error('Access your learner gallery before downloading a photo.');
+            }
+            return invoke('parent-photo-download', {
+                accessToken: accessToken,
+                requestId: requestId
             });
         },
         orders: async function () {
@@ -283,6 +417,19 @@
         return result.data;
     }
 
+    async function getActiveBookingServices() {
+        const result = await getClient()
+            .from('booking_services')
+            .select('name, duration_minutes, display_order')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true })
+            .order('name', { ascending: true });
+        if (result.error) {
+            raise(result.error, 'Unable to load current photography services.');
+        }
+        return result.data;
+    }
+
     async function submitBooking(booking) {
         return invoke('create-booking', booking);
     }
@@ -295,6 +442,7 @@
         getClient: getClient,
         invoke: invoke,
         getActivePackages: getActivePackages,
+        getActiveBookingServices: getActiveBookingServices,
         submitBooking: submitBooking,
         admin: admin,
         parent: parent

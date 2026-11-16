@@ -159,6 +159,8 @@
                     phone: String(formData.get('phone') || '').trim(),
                     serviceType: String(formData.get('serviceType') || '').trim(),
                     preferredDate: String(formData.get('preferredDate') || ''),
+                    preferredTime: String(formData.get('preferredTime') || ''),
+                    location: String(formData.get('location') || '').trim(),
                     message: String(formData.get('message') || '').trim()
                 });
                 contactForm.reset();

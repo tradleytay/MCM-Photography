@@ -4,6 +4,7 @@ import { createServiceClient } from "../_shared/supabase.ts";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
 function validDate(value: unknown): value is string {
   if (typeof value !== "string" || !datePattern.test(value)) return false;
@@ -17,24 +18,44 @@ Deno.serve((request) =>
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
     const phone = typeof body.phone === "string" ? body.phone.trim() : "";
     const serviceType = typeof body.serviceType === "string" ? body.serviceType.trim() : "";
+    const location = typeof body.location === "string" ? body.location.trim() : "";
     const message = typeof body.message === "string" ? body.message.trim() : "";
     const preferredDate = body.preferredDate === "" || body.preferredDate == null
       ? null
       : body.preferredDate;
+    const preferredTime = body.preferredTime === "" || body.preferredTime == null
+      ? null
+      : body.preferredTime;
 
     if (clientName.length < 2 || clientName.length > 120 ||
         !emailPattern.test(email) || email.length > 254 ||
         phone.length > 40 || serviceType.length < 2 || serviceType.length > 100 ||
+        location.length > 500 ||
         message.length < 1 || message.length > 5000 ||
         (preferredDate !== null &&
-          !validDate(preferredDate))) {
+          !validDate(preferredDate)) ||
+        (preferredTime !== null &&
+          (typeof preferredTime !== "string" || !timePattern.test(preferredTime)))) {
       throw new HttpError(400, "invalid_booking", "Check the booking details and try again.");
+    }
+
+    const service = createServiceClient();
+    const { data: activeService, error: serviceError } = await service
+      .from("booking_services")
+      .select("name")
+      .eq("name", serviceType)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (serviceError) {
+      throw new Error("Unable to validate the requested photography service.");
+    }
+    if (!activeService) {
+      throw new HttpError(400, "invalid_service", "Choose a currently available photography service.");
     }
 
     const ipAddress = req.headers.get("cf-connecting-ip") ??
       req.headers.get("x-real-ip") ?? "unknown";
     const ipHash = await keyedHash(`booking-ip:${ipAddress}`);
-    const service = createServiceClient();
     const { data: allowed, error: rateLimitError } = await service.rpc(
       "consume_public_booking_attempt",
       { p_ip_hash: ipHash },
@@ -54,6 +75,8 @@ Deno.serve((request) =>
         phone,
         service_type: serviceType,
         preferred_date: preferredDate,
+        preferred_time: preferredTime,
+        location,
         message,
       })
       .select("booking_code")

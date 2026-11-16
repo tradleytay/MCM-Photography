@@ -114,6 +114,31 @@
             });
     }
 
+    function renderBookingServices(client) {
+        const select = document.querySelector('#contactForm select[name="serviceType"]');
+        if (!select) return Promise.resolve();
+        return client.from('booking_services')
+            .select('name')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true })
+            .order('name', { ascending: true })
+            .then(function (result) {
+                if (result.error) throw result.error;
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.disabled = true;
+                placeholder.selected = true;
+                placeholder.textContent = 'Choose a service';
+                select.replaceChildren(placeholder);
+                result.data.forEach(function (service) {
+                    const option = document.createElement('option');
+                    option.value = service.name;
+                    option.textContent = service.name;
+                    select.appendChild(option);
+                });
+            });
+    }
+
     if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' &&
         window.location.hostname !== '127.0.0.1') {
         return;
@@ -129,7 +154,8 @@
                     if (result.error) throw result.error;
                     applyContent(result.data);
                 }),
-            renderPackages(client)
+            renderPackages(client),
+            renderBookingServices(client)
         ]);
     }).catch(function (error) {
         console.error('Unable to load published website content.', error);

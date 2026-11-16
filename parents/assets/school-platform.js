@@ -5,6 +5,7 @@
     const selection = loadSelection();
     let galleryPhotos = [];
     let activePackages = [];
+    let downloadOrders = [];
 
     function loadSelection() {
         try {
@@ -76,6 +77,11 @@
 
     function connectAccessForm(form) {
         setFormDisabled(form, false);
+        const reference = new URLSearchParams(window.location.search).get('reference');
+        if (reference && /^[A-Za-z0-9-]{4,40}$/.test(reference)) {
+            form.elements.learnerRef.value = reference.toUpperCase();
+            form.elements.pin.focus();
+        }
         form.addEventListener('submit', async function (event) {
             event.preventDefault();
             if (!form.reportValidity()) return;
@@ -253,7 +259,73 @@
                 renderCart();
             });
             label.append(checkbox, element('span', '', 'Select for order request'));
-            card.append(image, title, label);
+            const downloadStatus = element('p', 'gallery-photo-card__meta px-3 mb-2', '');
+            const associatedOrder = downloadOrders.find(function (order) {
+                return order.status !== 'cancelled' &&
+                    (order.items || []).some(function (item) {
+                        return item.item_type === 'photo' && item.photo_id === photo.id;
+                    });
+            });
+            const request = associatedOrder && (associatedOrder.downloads || []).find(function (item) {
+                return item.photo_id === photo.id;
+            });
+            const downloadButton = element(
+                'button',
+                'btn btn-sm btn-outline-primary mx-3 mb-3',
+                request && request.status === 'approved' ? 'Download original' :
+                    (request && request.status === 'pending' ? 'Download approval pending' :
+                        (request && request.status === 'rejected' ? 'Request download again' : 'Request download'))
+            );
+            downloadButton.type = 'button';
+            downloadButton.disabled = !associatedOrder ||
+                Boolean(request && request.status === 'approved' && Number(request.download_count) >= 5) ||
+                Boolean(request && request.status === 'pending');
+            if (!associatedOrder) downloadStatus.textContent = 'Order this photograph before requesting its original.';
+            else if (request && request.status === 'approved' && Number(request.download_count) >= 5) {
+                downloadStatus.textContent = 'Download limit reached.';
+                downloadButton.textContent = 'Download limit reached';
+            } else if (request && request.status === 'pending') {
+                downloadStatus.textContent = 'Waiting for MCM to review your download request.';
+            }
+            downloadButton.addEventListener('click', async function () {
+                downloadButton.disabled = true;
+                try {
+                    if (request && request.status === 'approved') {
+                        const result = await window.MCMBackend.parent.downloadPhoto(request.id);
+                        window.location.assign(result.downloadUrl);
+                        return;
+                    }
+                    const result = await window.MCMBackend.parent.requestPhotoDownload(associatedOrder.id, photo.id);
+                    downloadOrders.forEach(function (order) {
+                        if (order.id === associatedOrder.id) {
+                            order.downloads = order.downloads || [];
+                            order.downloads = order.downloads.filter(function (item) { return item.photo_id !== photo.id; });
+                            order.downloads.push({
+                                id: result.requestId,
+                                order_id: order.id,
+                                photo_id: photo.id,
+                                status: result.status,
+                                download_count: result.downloadCount
+                            });
+                        }
+                    });
+                    if (result.status === 'approved') {
+                        renderGalleryCards();
+                    } else {
+                        downloadStatus.textContent = result.status === 'pending'
+                            ? 'Download request sent. MCM must approve it before the original is available.'
+                            : 'Download request status: ' + result.status + '.';
+                        downloadButton.textContent = result.status === 'pending'
+                            ? 'Download approval pending'
+                            : 'Request download';
+                        downloadButton.disabled = result.status === 'pending';
+                    }
+                } catch (error) {
+                    showNotice(root.parentElement, error.message || 'The download request could not be completed.', 'alert-warning');
+                    downloadButton.disabled = false;
+                }
+            });
+            card.append(image, title, label, downloadStatus, downloadButton);
             column.appendChild(card);
             root.appendChild(column);
         });
@@ -318,10 +390,15 @@
         showNotice(hero, 'Submit an unpaid order request for selected photos or packages. No online payment is taken.', 'alert-info');
         showNotice(galleryRoot.parentElement, 'Loading your private gallery…', 'alert-info');
 
-        Promise.all([window.MCMBackend.parent.gallery(), window.MCMBackend.getActivePackages()]).then(function (results) {
+        Promise.all([
+            window.MCMBackend.parent.gallery(),
+            window.MCMBackend.getActivePackages(),
+            window.MCMBackend.parent.orders()
+        ]).then(function (results) {
             const gallery = results[0];
             galleryPhotos = gallery.photos || [];
             activePackages = results[1] || [];
+            downloadOrders = results[2].orders || [];
             setLearnerSummary(gallery.learner);
             selection.photoIds.forEach(function (id) {
                 if (!galleryPhotos.some(function (photo) { return photo.id === id; })) selection.photoIds.delete(id);

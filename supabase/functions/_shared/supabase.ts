@@ -35,7 +35,10 @@ export async function requireAdmin(request: Request): Promise<{ id: string; emai
   if (error || !data.user) {
     throw new HttpError(401, "unauthorized", "Sign in with an administrator account.");
   }
-  if (data.user.app_metadata?.role !== "admin") {
+  if (
+    data.user.app_metadata?.role !== "admin" ||
+    data.user.app_metadata?.admin_suspended === true
+  ) {
     throw new HttpError(403, "forbidden", "Administrator access is required.");
   }
   return { id: data.user.id, email: data.user.email };

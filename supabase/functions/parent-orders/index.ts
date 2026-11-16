@@ -58,15 +58,24 @@ Deno.serve((request) =>
     }
     const { data: items, error: itemsError } = await service
       .from("parent_order_items")
-      .select("order_id, item_type, title_snapshot, unit_price_cents")
+      .select("order_id, item_type, photo_id, package_id, title_snapshot, unit_price_cents")
       .in("order_id", orders.map((order) => order.id));
     if (itemsError) {
       throw new Error("Unable to load order items.");
+    }
+    const { data: downloads, error: downloadsError } = await service
+      .from("photo_download_requests")
+      .select("id, order_id, photo_id, status, download_count")
+      .eq("learner_id", session.learner_id)
+      .in("order_id", orders.map((order) => order.id));
+    if (downloadsError) {
+      throw new Error("Unable to load photo download requests.");
     }
     return {
       orders: orders.map((order) => ({
         ...order,
         items: (items ?? []).filter((item) => item.order_id === order.id),
+        downloads: (downloads ?? []).filter((download) => download.order_id === order.id),
       })),
     };
   })

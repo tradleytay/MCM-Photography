@@ -50,9 +50,11 @@ Deno.serve((request) =>
 
     const { data: photos, error: photosError } = await service
       .from("school_photos")
-      .select("id, title, storage_path, display_order")
+      .select("id, title, preview_storage_path, display_order")
       .eq("learner_id", learner.id)
       .eq("is_published", true)
+      .eq("is_archived", false)
+      .not("preview_storage_path", "is", null)
       .order("display_order", { ascending: true })
       .limit(100);
     if (photosError || !photos) {
@@ -62,7 +64,7 @@ Deno.serve((request) =>
     const signedPhotos = await Promise.all(photos.map(async (photo) => {
       const { data, error } = await service.storage
         .from("learner-photos")
-        .createSignedUrl(photo.storage_path, photoUrlLifetimeSeconds);
+        .createSignedUrl(photo.preview_storage_path, photoUrlLifetimeSeconds);
       if (error || !data?.signedUrl) {
         throw new Error("Unable to prepare a private photograph.");
       }
