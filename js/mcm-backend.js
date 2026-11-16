@@ -6,10 +6,14 @@
     const adminTables = Object.freeze({
         schools: 'schools',
         projects: 'school_projects',
-        classes: 'classes',
+        classes: 'school_classes',
         learners: 'learners',
         photos: 'school_photos',
         packages: 'packages',
+        content: 'site_content',
+        bookings: 'bookings',
+        orders: 'parent_orders',
+        orderItems: 'parent_order_items',
         audit: 'admin_audit_log'
     });
     let client;
@@ -193,6 +197,22 @@
                 raise(result.error, 'Unable to delete the ' + collection + ' record.');
             }
         },
+        createOrder: async function (learnerId, photoIds, packageIds, adminNotes) {
+            await requireAdminUser();
+            const result = await getClient().rpc('create_admin_order', {
+                p_learner_id: learnerId,
+                p_photo_ids: photoIds,
+                p_package_ids: packageIds,
+                p_admin_notes: adminNotes || ''
+            });
+            if (result.error) {
+                raise(result.error, 'Unable to create the order record.');
+            }
+            if (!Array.isArray(result.data) || !result.data[0]) {
+                throw new Error('The new order could not be confirmed.');
+            }
+            return result.data[0];
+        },
         setLearnerPin: async function (learnerId, pin) {
             await requireAdminUser();
             return invoke('admin-set-learner-pin', { learnerId: learnerId, pin: pin });
@@ -215,6 +235,25 @@
             }
             return invoke('parent-gallery', { accessToken: accessToken });
         },
+        submitOrder: async function (selection) {
+            const accessToken = global.sessionStorage.getItem(parentAccessKey);
+            if (!accessToken) {
+                throw new Error('Access your learner gallery before submitting an order request.');
+            }
+            return invoke('parent-submit-order', {
+                accessToken: accessToken,
+                photoIds: selection.photoIds,
+                packageIds: selection.packageIds,
+                parentNote: selection.parentNote || ''
+            });
+        },
+        orders: async function () {
+            const accessToken = global.sessionStorage.getItem(parentAccessKey);
+            if (!accessToken) {
+                throw new Error('Access your learner gallery to view order requests.');
+            }
+            return invoke('parent-orders', { accessToken: accessToken });
+        },
         endSession: async function () {
             const accessToken = global.sessionStorage.getItem(parentAccessKey);
             if (!accessToken) {
@@ -231,6 +270,23 @@
         }
     });
 
+    async function getActivePackages() {
+        const result = await getClient()
+            .from('packages')
+            .select('id, name, description, price_cents, display_order')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true })
+            .order('name', { ascending: true });
+        if (result.error) {
+            raise(result.error, 'Unable to load current photography packages.');
+        }
+        return result.data;
+    }
+
+    async function submitBooking(booking) {
+        return invoke('create-booking', booking);
+    }
+
     global.MCMBackend = Object.freeze({
         isConfigured: isConfigured,
         isReady: isReady,
@@ -238,6 +294,8 @@
         configurationError: configurationError,
         getClient: getClient,
         invoke: invoke,
+        getActivePackages: getActivePackages,
+        submitBooking: submitBooking,
         admin: admin,
         parent: parent
     });

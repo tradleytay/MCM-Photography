@@ -27,3 +27,12 @@ verify_jwt = false
 
 [functions.admin-set-learner-pin]
 verify_jwt = false
+
+[functions.create-booking]
+verify_jwt = false
+
+[functions.parent-submit-order]
+verify_jwt = false
+
+[functions.parent-orders]
+verify_jwt = false

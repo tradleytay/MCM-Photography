@@ -17,7 +17,7 @@
     <link href="./css/bootstrap.min.css" rel="stylesheet">
     <link href="./css/style.css" rel="stylesheet">
 </head>
-<body>
+<body data-cms-page="school-photography">
     <nav class="navbar navbar-expand-lg bg-white navbar-light fixed-top shadow py-lg-0 px-4 px-lg-5 wow fadeIn" data-wow-delay="0.2s">
         <a href="index.html" class="navbar-brand d-block d-lg-none">
             <img src="./img/logo.png" alt="MCM Photography Logo" style="max-height: 60px;" class="me-2">
@@ -48,9 +48,9 @@
             <div class="container py-5">
                 <div class="row g-5 align-items-center">
                     <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
-                        <p class="text-primary text-uppercase mb-2">School Photography</p>
-                        <h1 class="display-5 mb-4">Professional portraits that families can trust.</h1>
-                        <p class="lead mb-4">MCM Photography creates polished school photography experiences with premium keepsakes. Secure parent galleries and online ordering will be enabled after the backend is connected.</p>
+                        <p class="text-primary text-uppercase mb-2" data-cms-key="hero.eyebrow">School Photography</p>
+                        <h1 class="display-5 mb-4" data-cms-key="hero.title">Professional portraits that families can trust.</h1>
+                        <p class="lead mb-4" data-cms-key="hero.description">MCM Photography creates polished school photography experiences with premium keepsakes. Families can securely select photos and send an unpaid order request for confirmation.</p>
                         <div class="d-flex flex-column flex-sm-row gap-3 mb-4">
                             <a href="contact.html#book" class="btn btn-primary py-3 px-5">Book a School Session</a>
                             <a href="#school-packages" class="btn btn-outline-primary py-3 px-5">View Packages</a>
@@ -72,7 +72,7 @@
                                     <strong>Parent portal coming soon</strong>
                                 </div>
                             </div>
-                            <img src="./img/hero-1.jpg" alt="Sample school portrait" class="img-fluid rounded-3">
+                            <img src="./img/hero-1.jpg" alt="Sample school portrait" class="img-fluid rounded-3" data-cms-key="hero.image">
                             <div class="school-hero-overlay">
                                 <span>Parent access</span>
                                 <strong>Learn. Capture. Order.</strong>
@@ -98,14 +98,14 @@
                     <div class="info-card h-100">
                         <div class="icon-wrap"><i class="bi bi-shield-lock"></i></div>
                         <h3>Private parent access</h3>
-                        <p>Private galleries will be available after secure sign-in and authorization are configured.</p>
+                        <p>Each family receives a learner code and PIN from the school to open a private photo gallery.</p>
                     </div>
                 </div>
                 <div class="col-md-4 wow fadeInUp" data-wow-delay="0.3s">
                     <div class="info-card h-100">
                         <div class="icon-wrap"><i class="bi bi-bag-check"></i></div>
                         <h3>Simple ordering flow</h3>
-                        <p>Online selections and checkout will open after the secure ordering backend is connected.</p>
+                        <p>Select photos or packages and send an unpaid order request. MCM Photography confirms details and payment arrangements.</p>
                     </div>
                 </div>
             </div>
@@ -116,8 +116,8 @@
         <div class="container-xxl">
             <div class="container">
                 <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 650px;">
-                    <p class="text-primary text-uppercase mb-2">Photography packages</p>
-                    <h2 class="display-6 mb-3">Popular school keepsake options</h2>
+                    <p class="text-primary text-uppercase mb-2" data-cms-key="packages.eyebrow">Photography packages</p>
+                    <h2 class="display-6 mb-3" data-cms-key="packages.title">Popular school keepsake options</h2>
                 </div>
                 <div class="row g-4" data-package-list></div>
             </div>
@@ -135,14 +135,14 @@
                             <span>1</span>
                             <div>
                                 <h4>Receive learner code</h4>
-                                <p>When the portal is available, each learner will receive access details through the school.</p>
+                                <p>Each family receives private access details through the school.</p>
                             </div>
                         </div>
                         <div class="process-item">
                             <span>2</span>
                             <div>
                                 <h4>Scan or enter access details</h4>
-                                <p>Secure access instructions will be provided when the parent portal launches.</p>
+                                <p>Enter the learner reference code and PIN on the secure parent access page.</p>
                             </div>
                         </div>
                         <div class="process-item">

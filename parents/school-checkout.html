@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>School Checkout — MCM Photography</title>
-    <meta name="description" content="Review school photography packages, selected images and checkout details before submitting an order.">
+    <title>School Photography Order Request — MCM Photography</title>
+    <meta name="description" content="Review selected school photos and packages and submit an unpaid order request.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
@@ -46,90 +46,22 @@
             <div class="row g-5">
                 <div class="col-lg-8 wow fadeInUp" data-wow-delay="0.1s">
                     <div class="teacher-card">
-                        <p class="text-primary text-uppercase mb-2">Checkout</p>
-                        <h1 class="display-6 mb-4">Complete your order</h1>
+                        <p class="text-primary text-uppercase mb-2">Order request</p>
+                        <h1 class="display-6 mb-4">Review your selections</h1>
                         <form id="checkoutForm" class="school-form">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="guardianName" name="guardianName" placeholder="Parent/guardian name" required disabled>
-                                        <label for="guardianName">Parent/guardian name</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="email" class="form-control" id="guardianEmail" name="guardianEmail" placeholder="Email address" required disabled>
-                                        <label for="guardianEmail">Email address</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="tel" class="form-control" id="guardianPhone" name="guardianPhone" placeholder="Phone number" required disabled>
-                                        <label for="guardianPhone">Phone number</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <select class="form-select" id="paymentMethod" name="paymentMethod" required disabled>
-                                            <option value="bank-transfer">Bank transfer</option>
-                                            <option value="instant-transfer">Instant transfer</option>
-                                            <option value="cash">Cash</option>
-                                        </select>
-                                        <label for="paymentMethod">Payment method</label>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="paymentReference" name="paymentReference" placeholder="Payment reference" required disabled>
-                                        <label for="paymentReference">Payment reference</label>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="upload-box">
-                                        <label for="paymentProof">Payment proof upload (available after secure storage is configured)</label>
-                                        <input type="file" id="paymentProof" name="paymentProof" class="form-control mt-2" disabled>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-check mt-2">
-                                        <input class="form-check-input" type="checkbox" id="confirmLearnerDetails" name="confirmLearnerDetails" required disabled>
-                                        <label class="form-check-label" for="confirmLearnerDetails">
-                                            I confirm the learner and gallery details are correct before submitting this order.
-                                        </label>
-                                    </div>
-                                </div>
+                            <div data-checkout-items class="mb-4"></div>
+                            <div class="form-floating">
+                                <textarea class="form-control" id="parentNote" name="parentNote" maxlength="2000" style="height: 120px" placeholder="Note for MCM Photography"></textarea>
+                                <label for="parentNote">Note for MCM Photography (optional)</label>
                             </div>
-                            <button type="submit" class="btn btn-primary py-3 px-5 mt-4" disabled>Submit order</button>
+                            <p class="small text-muted mt-3">This submits an unpaid order request. MCM Photography will contact you to confirm the order and payment arrangements.</p>
+                            <p class="mt-3" data-order-submit-status role="status" aria-live="polite"></p>
+                            <button type="submit" class="btn btn-primary py-3 px-5 mt-3" disabled>Submit order request</button>
                         </form>
                     </div>
                 </div>
                 <div class="col-lg-4 wow fadeInUp" data-wow-delay="0.2s">
                     <div class="summary-box" data-checkout-summary></div>
-                    <div class="package-selector-box mt-4">
-                        <p class="text-primary text-uppercase mb-2">Select package</p>
-                        <div class="package-list" data-package-selector></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="container-xxl pb-5">
-        <div class="container">
-            <div class="bank-details-box wow fadeInUp" data-wow-delay="0.1s">
-                <p class="text-primary text-uppercase mb-2">Bank transfer</p>
-                <h3>Payment instructions</h3>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <p><strong>Bank:</strong> First National Bank</p>
-                        <p><strong>Account name:</strong> MCM Photography</p>
-                        <p><strong>Account number:</strong> 630 480 9012</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Branch:</strong> Cape Town</p>
-                        <p><strong>Branch code:</strong> 250655</p>
-                        <p><strong>Reference:</strong> Use your learner order reference</p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -141,7 +73,7 @@
                 <p class="mb-0">&copy; <a class="text-primary" href="../index.html">MCM Photography</a> · All rights reserved.</p>
             </div>
             <div class="py-4 px-5 text-center text-md-end">
-                <p class="mb-0">Cape Town • School photography • Checkout</p>
+                <p class="mb-0">Cape Town • School photography • Order requests</p>
             </div>
         </div>
     </div>

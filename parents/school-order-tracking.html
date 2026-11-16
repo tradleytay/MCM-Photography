@@ -46,22 +46,11 @@
             <div class="row justify-content-center">
                 <div class="col-lg-8 wow fadeInUp" data-wow-delay="0.1s">
                     <div class="teacher-card">
-                        <p class="text-primary text-uppercase mb-2">Order tracking</p>
-                        <h1 class="display-6 mb-3">Track your package</h1>
-                        <form id="orderTrackingForm" class="school-form">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-md-9">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="orderReference" name="orderReference" placeholder="Order reference" required disabled>
-                                        <label for="orderReference">Order reference</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-primary w-100 py-3" disabled>Track order</button>
-                                </div>
-                            </div>
-                        </form>
-                        <div class="mt-4" data-order-status></div>
+                        <p class="text-primary text-uppercase mb-2">Order requests</p>
+                        <h1 class="display-6 mb-3">Your order status</h1>
+                        <p class="mb-4">Sign in through the secure parent gallery to view order requests and production or delivery updates.</p>
+                        <div class="mt-4" data-order-status aria-live="polite"></div>
+                        <a class="btn btn-outline-primary mt-3" href="school-gallery.html">Return to parent gallery</a>
                     </div>
                 </div>
             </div>

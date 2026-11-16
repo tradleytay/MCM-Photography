@@ -132,24 +132,60 @@
     });
     var contactForm = document.getElementById('contactForm');
     if (contactForm) {
-        contactForm.addEventListener('submit', function(event) {
+        contactForm.addEventListener('submit', async function(event) {
             event.preventDefault();
+            if (!contactForm.reportValidity()) return;
+            var status = contactForm.querySelector('[data-booking-status]');
+            var submit = contactForm.querySelector('button[type="submit"]');
             var formData = new FormData(contactForm);
-            var message = [
-                'Hello MCM Photography, I would like to enquire about a session.',
-                '',
-                'Name: ' + formData.get('name'),
-                'Email: ' + formData.get('email'),
-                'Subject: ' + formData.get('subject'),
-                '',
-                formData.get('message')
-            ].join('\n');
-            if (event.submitter && event.submitter.value === 'email') {
-                window.location.href = 'mailto:mcmphotographyct@gmail.com?subject=' +
-                    encodeURIComponent(formData.get('subject')) + '&body=' + encodeURIComponent(message);
+            if (!window.MCMBackend || !window.MCMBackend.isReady()) {
+                if (status) {
+                    status.textContent = window.MCMBackend
+                        ? window.MCMBackend.readinessMessage() + ' Please contact us by phone or WhatsApp instead.'
+                        : 'Booking requests are temporarily unavailable. Please contact us by phone or WhatsApp instead.';
+                    status.classList.add('text-danger');
+                }
                 return;
             }
-            window.location.href = 'https://wa.me/' + whatsappPhone + '?text=' + encodeURIComponent(message);
+            submit.disabled = true;
+            if (status) {
+                status.textContent = 'Sending your booking request…';
+                status.classList.remove('text-danger', 'text-success');
+            }
+            try {
+                var result = await window.MCMBackend.submitBooking({
+                    name: String(formData.get('name') || '').trim(),
+                    email: String(formData.get('email') || '').trim(),
+                    phone: String(formData.get('phone') || '').trim(),
+                    serviceType: String(formData.get('serviceType') || '').trim(),
+                    preferredDate: String(formData.get('preferredDate') || ''),
+                    message: String(formData.get('message') || '').trim()
+                });
+                contactForm.reset();
+                if (status) {
+                    status.textContent = 'Request received. Your reference is ' + result.bookingCode +
+                        '. We will contact you to confirm details.';
+                    status.classList.add('text-success');
+                    status.classList.remove('text-danger');
+                }
+            } catch (error) {
+                if (status) {
+                    status.textContent = error.message || 'The booking request could not be sent. Please try again or contact us directly.';
+                    status.classList.add('text-danger');
+                    status.classList.remove('text-success');
+                }
+            } finally {
+                submit.disabled = false;
+            }
         });
     }
+})();
+
+(function() {
+    var mainScript = document.currentScript;
+    if (!mainScript || !mainScript.src) return;
+    var contentScript = document.createElement('script');
+    contentScript.src = new URL('site-content.js', mainScript.src).href;
+    contentScript.defer = true;
+    document.head.appendChild(contentScript);
 })();

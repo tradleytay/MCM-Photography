@@ -40,7 +40,7 @@
     <!-- Template Stylesheet -->
     <link href="./css/style.css" rel="stylesheet">
 </head>
-<body>
+<body data-cms-page="contact">
     <!-- Spinner Start -->
     <div id="spinner" class="show" role="status" aria-live="polite" aria-label="Loading MCM Photography">
         <div class="preloader-panel">
@@ -81,18 +81,18 @@
     <div class="container-xxl py-5" id="book">
         <div class="container">
             <div class="page-intro text-center mx-auto wow fadeInUp" data-wow-delay="0.1s">
-                <p class="text-primary text-uppercase mb-2">Book a Session</p>
-                <h1 class="display-6 mb-5">Let’s Discuss Your Vision</h1>
+                <p class="text-primary text-uppercase mb-2" data-cms-key="booking.eyebrow">Book a Session</p>
+                <h1 class="display-6 mb-5" data-cms-key="booking.title">Let’s Discuss Your Vision</h1>
             </div>
             <div class="row g-0 justify-content-center">
                 <div class="col-lg-8 wow fadeInUp" data-wow-delay="0.1s">
-                    <p class="text-center mb-4">Whether you are planning a wedding, portrait session, or a brand-focused visual project, we would be delighted to hear about your vision. Get in touch to discuss availability, pricing, and how we can help preserve your most important moments with clarity and elegance.</p>
+                    <p class="text-center mb-4" data-cms-key="booking.description">Whether you are planning a wedding, portrait session, or a brand-focused visual project, we would be delighted to hear about your vision. Get in touch to discuss availability, pricing, and how we can help preserve your most important moments with clarity and elegance.</p>
                     <form id="contactForm">
-                        <p class="text-center mb-4">Complete the form, then choose WhatsApp or email. Your message will be prepared for you to send.</p>
+                        <p class="text-center mb-4">Send a booking request directly to our team. We will contact you to confirm availability and pricing.</p>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="text" class="form-control" id="name" name="name" placeholder="Your Name" autocomplete="name" maxlength="100" required>
+                                    <input type="text" class="form-control" id="name" name="name" placeholder="Your Name" autocomplete="name" maxlength="120" required>
                                     <label for="name">Your Name</label>
                                 </div>
                             </div>
@@ -102,23 +102,42 @@
                                     <label for="email">Your Email</label>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="Phone number" autocomplete="tel" maxlength="40">
+                                    <label for="phone">Phone number (optional)</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="serviceType" name="serviceType" required>
+                                        <option value="" selected disabled>Choose a service</option>
+                                        <option value="Wedding photography">Wedding photography</option>
+                                        <option value="Portrait photography">Portrait photography</option>
+                                        <option value="Event photography">Event photography</option>
+                                        <option value="Fashion photography">Fashion photography</option>
+                                        <option value="School photography">School photography</option>
+                                        <option value="Other enquiry">Other enquiry</option>
+                                    </select>
+                                    <label for="serviceType">Service</label>
+                                </div>
+                            </div>
                             <div class="col-12">
                                 <div class="form-floating">
-                                    <input type="text" class="form-control" id="subject" name="subject" placeholder="Subject" maxlength="150" required>
-                                    <label for="subject">Subject</label>
+                                    <input type="date" class="form-control" id="preferredDate" name="preferredDate">
+                                    <label for="preferredDate">Preferred date (optional)</label>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="form-floating">
                                     <textarea class="form-control" placeholder="Leave a message here" id="message" name="message" maxlength="5000" style="height: 200px" required></textarea>
-                                    <label for="message">Message</label>
+                                    <label for="message">Your message</label>
                                 </div>
                             </div>
-                            <div class="col-12 d-flex flex-column flex-sm-row justify-content-center gap-2">
-                                <button class="btn btn-primary py-3 px-5" type="submit" name="contactMethod" value="whatsapp">Continue to WhatsApp</button>
-                                <button class="btn btn-outline-primary py-3 px-5" type="submit" name="contactMethod" value="email">Continue to Email</button>
+                            <p class="col-12 text-center mb-0" data-booking-status role="status" aria-live="polite"></p>
+                            <div class="col-12 d-flex justify-content-center">
+                                <button class="btn btn-primary py-3 px-5" type="submit">Send booking request</button>
                             </div>
-                            <p class="col-12 text-center small mb-0">Email opens in your default email app. Review and send your message there.</p>
                         </div>
                     </form>
                 </div>

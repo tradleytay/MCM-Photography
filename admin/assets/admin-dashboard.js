@@ -15,6 +15,11 @@
         classes: [],
         learners: [],
         photos: [],
+        packages: [],
+        content: [],
+        bookings: [],
+        orders: [],
+        orderItems: [],
         audit: []
     };
 
@@ -24,6 +29,16 @@
             target.textContent = message || '';
             target.classList.toggle('is-error', Boolean(isError));
         });
+    }
+
+    function isSafeWebsiteUrl(value) {
+        try {
+            const parsed = new URL(value, window.location.origin);
+            return parsed.protocol === 'https:' ||
+                (parsed.protocol === 'http:' && parsed.origin === window.location.origin);
+        } catch (error) {
+            return false;
+        }
     }
 
     function element(tag, className, text) {
@@ -59,9 +74,10 @@
         let control;
         if (type === 'select') {
             control = document.createElement('select');
+            control.multiple = Boolean(options.multiple);
             const prompt = element('option', '', options.prompt || 'Choose…');
             prompt.value = '';
-            control.appendChild(prompt);
+            if (!control.multiple) control.appendChild(prompt);
             (options.items || []).forEach(function (item) {
                 const option = element('option', '', options.label(item));
                 option.value = item.id;
@@ -174,23 +190,65 @@
             { name: 'learnerClass', items: records.classes, label: function (item) { return item.name; } },
             { name: 'consentLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
             { name: 'pinLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
-            { name: 'photoLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } }
+            { name: 'photoLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
+            { name: 'orderLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
+            { name: 'orderPhotos', items: records.photos, label: function (item) { return item.title; } },
+            { name: 'orderPackages', items: records.packages.filter(function (item) { return item.is_active; }), label: function (item) { return item.name; } },
+            { name: 'bookingRecord', items: records.bookings, label: function (item) { return item.booking_code + ' — ' + item.client_name; } },
+            { name: 'contentEditRecord', items: records.content, label: function (item) { return item.page_key + ' / ' + item.content_key; } },
+            { name: 'orderRecord', items: records.orders, label: function (item) { return item.order_code + ' — ' + item.status; } }
         ];
         selectors.forEach(function (selector) {
             const control = document.querySelector('#admin-' + selector.name);
             if (!control) return;
-            const previous = control.value;
-            control.replaceChildren(element('option', '', 'Choose…'));
-            control.options[0].value = '';
+            const previous = control.multiple
+                ? Array.prototype.map.call(control.selectedOptions, function (option) { return option.value; })
+                : [control.value];
+            control.replaceChildren();
+            if (!control.multiple) {
+                control.appendChild(element('option', '', 'Choose…'));
+                control.options[0].value = '';
+            }
             selector.items.forEach(function (item) {
                 const option = element('option', '', selector.label(item));
                 option.value = item.id;
+                option.selected = previous.includes(item.id);
                 control.appendChild(option);
             });
-            if (selector.items.some(function (item) { return item.id === previous; })) {
-                control.value = previous;
+            if (!control.multiple && selector.items.some(function (item) { return item.id === previous[0]; })) {
+                control.value = previous[0];
             }
             control.disabled = selector.items.length === 0;
+        });
+        const orderLearner = document.getElementById('admin-orderLearner');
+        const orderPhotos = document.getElementById('admin-orderPhotos');
+        if (orderLearner && orderPhotos) {
+            const selectedPhotoIds = Array.prototype.map.call(orderPhotos.selectedOptions, function (option) {
+                return option.value;
+            });
+            const learnerPhotos = records.photos.filter(function (photo) {
+                return photo.learner_id === orderLearner.value;
+            });
+            orderPhotos.replaceChildren();
+            learnerPhotos.forEach(function (photo) {
+                const option = element('option', '', photo.title);
+                option.value = photo.id;
+                option.selected = selectedPhotoIds.includes(photo.id);
+                orderPhotos.appendChild(option);
+            });
+            orderPhotos.disabled = learnerPhotos.length === 0;
+        }
+        [
+            ['contentEditRecord', 'contentEditForm'],
+            ['bookingRecord', 'bookingStatusForm'],
+            ['orderLearner', 'orderCreateForm'],
+            ['orderRecord', 'orderStatusForm'],
+            ['productionOrder', 'productionStatusForm']
+        ].forEach(function (item) {
+            const field = document.getElementById('admin-' + item[0]);
+            const form = document.getElementById(item[1]);
+            const submit = form && form.querySelector('button[type="submit"]');
+            if (field && submit) submit.disabled = field.disabled;
         });
     }
 
@@ -212,14 +270,6 @@
         heading.appendChild(element('h3', '', title));
         panel.appendChild(heading);
         return panel;
-    }
-
-    function makePlaceholderSection(id, title, description, detail) {
-        const section = makeSection(id, title, description);
-        const panel = makePanel('Not connected yet');
-        panel.appendChild(element('p', 'panel-copy', detail));
-        section.appendChild(panel);
-        return section;
     }
 
     function activateSection(id) {
@@ -266,7 +316,7 @@
         const headingCopy = document.createElement('div');
         headingCopy.append(
             element('h2', '', 'Overview'),
-            element('p', '', 'A live summary of the school and photo records in your Supabase project.')
+            element('p', '', 'Live website, booking, school, order and fulfilment activity.')
         );
         heading.appendChild(headingCopy);
         section.appendChild(heading);
@@ -276,7 +326,8 @@
             { label: 'Schools', value: records.schools.length, detail: 'in this workspace', tone: 'bronze', icon: 'fa-school', target: 'schools' },
             { label: 'Active projects', value: records.projects.filter(function (item) { return item.status === 'active'; }).length, detail: 'school photography projects', tone: 'amber', icon: 'fa-folder-open', target: 'schools' },
             { label: 'Learners', value: records.learners.length, detail: 'registered learner records', tone: 'green', icon: 'fa-users', target: 'schools' },
-            { label: 'Published photos', value: records.photos.filter(function (item) { return item.is_published; }).length, detail: 'visible in parent galleries', tone: 'slate', icon: 'fa-camera', target: 'photos' }
+            { label: 'New bookings', value: records.bookings.filter(function (item) { return item.status === 'new'; }).length, detail: 'awaiting first contact', tone: 'slate', icon: 'fa-calendar-check', target: 'bookings' },
+            { label: 'Open orders', value: records.orders.filter(function (item) { return item.status === 'submitted' || item.status === 'confirmed'; }).length, detail: 'unpaid requests in progress', tone: 'green', icon: 'fa-box', target: 'orders' }
         ].forEach(function (metric) {
             const card = element('button', 'stat-card ' + metric.tone);
             card.type = 'button';
@@ -308,9 +359,17 @@
         const unpublished = records.photos.filter(function (photo) {
             return !photo.is_published;
         }).length;
+        const newBookings = records.bookings.filter(function (booking) {
+            return booking.status === 'new';
+        }).length;
+        const submittedOrders = records.orders.filter(function (order) {
+            return order.status === 'submitted';
+        }).length;
         [
             { count: pendingConsent, text: 'Learners awaiting consent review', target: 'schools' },
-            { count: unpublished, text: 'Photos not yet published', target: 'photos' }
+            { count: unpublished, text: 'Photos not yet published', target: 'photos' },
+            { count: newBookings, text: 'Booking requests awaiting contact', target: 'bookings' },
+            { count: submittedOrders, text: 'Parent order requests to review', target: 'orders' }
         ].forEach(function (item) {
             const row = document.createElement('li');
             row.appendChild(element('span', 'attention-count', String(item.count)));
@@ -323,8 +382,8 @@
             row.appendChild(link);
             attentionList.appendChild(row);
         });
-        if (pendingConsent + unpublished === 0) {
-            attention.appendChild(element('p', 'empty-state', 'No consent or photo publishing tasks are pending.'));
+        if (pendingConsent + unpublished + newBookings + submittedOrders === 0) {
+            attention.appendChild(element('p', 'empty-state', 'No bookings, orders, consent or photo publishing tasks are pending.'));
         } else {
             attention.appendChild(attentionList);
         }
@@ -426,18 +485,8 @@
         bindWorkspaceControls();
         sectionRoot.replaceChildren(
             makeSection('overview', 'Overview', ''),
-            makePlaceholderSection(
-                'website',
-                'Website Management',
-                'Manage website content and presentation.',
-                'This section is restored, but the current backend does not yet include editable website pages, media content, or public package publishing. No changes are being saved here.'
-            ),
-            makePlaceholderSection(
-                'bookings',
-                'Bookings',
-                'Review and manage photography enquiries and bookings.',
-                'Booking records are not included in the current Supabase schema. The section is available in the admin structure but will remain inactive until booking data and workflows are added.'
-            ),
+            makeSection('website', 'Website Management', 'Edit public text, image and link slots marked with data-cms-key, and manage school packages.'),
+            makeSection('bookings', 'Bookings', 'Review and update public booking requests.'),
             makeSection(
                 'schools',
                 'Schools & Learners',
@@ -448,21 +497,20 @@
                 'Photo Management',
                 'Upload private learner photos and control which images appear in parent galleries.'
             ),
-            makePlaceholderSection(
-                'orders',
-                'Orders & Payments',
-                'Manage parent orders and payment status.',
-                'Online checkout, payments, and order tracking are intentionally disabled and are not represented in the current backend.'
-            ),
-            makePlaceholderSection(
-                'production',
-                'Production & Deliveries',
-                'Track print production and fulfilment.',
-                'Production and delivery workflows are not included in the current backend and no sample records are shown.'
-            ),
+            makeSection('orders', 'Orders & Payments', 'Manage unpaid parent requests and admin-created orders. No online payment processing is enabled.'),
+            makeSection('production', 'Production & Deliveries', 'Update print production and delivery status for each order.'),
             makeSection('settings', 'Settings', 'Review your administrator account and workspace status.')
         );
+        const websiteSection = sectionRoot.querySelector('[data-admin-section="website"]');
+        const bookingsSection = sectionRoot.querySelector('[data-admin-section="bookings"]');
+        const ordersSection = sectionRoot.querySelector('[data-admin-section="orders"]');
+        const productionSection = sectionRoot.querySelector('[data-admin-section="production"]');
         const schoolsSection = sectionRoot.querySelector('[data-admin-section="schools"]');
+        websiteSection.appendChild(element(
+            'p',
+            'text-muted',
+            'Current page keys: home hero.* and about.*; about story.* and team.image-primary; contact booking.*; services services.*; service-weddings, service-portraits, service-metric and service-fashion hero.*; portfolio gallery.*; school-photography hero.* and packages.*. Use Image for image keys and Link for home hero.cta-book.'
+        ));
         const forms = element('div', 'backend-form-grid');
         const schoolForm = makeForm('Add school', [
             makeField('School name', 'schoolName', 'text', { required: true, maxLength: 160 }),
@@ -602,6 +650,338 @@
         photoTablesPanel.appendChild(photoTables);
         photoSection.appendChild(photoTablesPanel);
 
+        const websiteForms = element('div', 'backend-form-grid');
+        const packageForm = makeForm('Add school photography package', [
+            makeField('Package name', 'packageName', 'text', { required: true, maxLength: 120 }),
+            makeField('Description', 'packageDescription', 'textarea', { maxLength: 3000 }),
+            makeField('Price in rand', 'packagePrice', 'number', { required: true, min: 0, max: 999999, step: 0.01 }),
+            makeField('Display order', 'packageOrder', 'number', { required: true, min: 0, max: 10000, step: 1 })
+        ], async function (data) {
+            await window.MCMBackend.admin.create('packages', {
+                name: String(data.get('packageName')).trim(),
+                description: String(data.get('packageDescription') || '').trim(),
+                price_cents: Math.round(Number(data.get('packagePrice')) * 100),
+                display_order: Number(data.get('packageOrder')),
+                is_active: true
+            });
+        });
+        const contentForm = makeForm('Add public page content', [
+            makeField('Page key (for example home or contact)', 'contentPage', 'text', {
+                required: true,
+                maxLength: 80,
+                pattern: '[a-z0-9-]{1,80}'
+            }),
+            makeField('Content key (must match a page data-cms-key)', 'contentKey', 'text', {
+                required: true,
+                maxLength: 120,
+                pattern: '[a-z0-9._-]{1,120}'
+            }),
+            makeField('Content type', 'contentType', 'select', {
+                required: true,
+                items: [
+                    { id: 'text', name: 'Text' },
+                    { id: 'image', name: 'Image URL or uploaded image' },
+                    { id: 'link', name: 'Link URL' }
+                ],
+                label: function (item) { return item.name; }
+            }),
+            makeField('Text or URL', 'contentValue', 'textarea', { rows: 4, maxLength: 10000 }),
+            makeField('Optional image file (JPEG, PNG or WebP; up to 10 MB)', 'contentImage', 'file', {}),
+            makeField('Publish immediately', 'contentPublished', 'select', {
+                required: true,
+                items: [
+                    { id: 'true', name: 'Yes' },
+                    { id: 'false', name: 'No, keep as draft' }
+                ],
+                label: function (item) { return item.name; }
+            })
+        ], async function (data) {
+            const pageKey = String(data.get('contentPage')).trim();
+            const contentType = String(data.get('contentType'));
+            const file = data.get('contentImage');
+            let value = String(data.get('contentValue') || '').trim();
+            let uploadedPath = null;
+            if (contentType === 'image' && file instanceof File && file.size > 0) {
+                const allowedTypes = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+                if (!allowedTypes[file.type] || file.size > 10 * 1024 * 1024) {
+                    throw new Error('Choose a JPEG, PNG or WebP image smaller than 10 MB.');
+                }
+                uploadedPath = 'site/' + pageKey + '/' + crypto.randomUUID() + '.' + allowedTypes[file.type];
+                const storage = window.MCMBackend.getClient().storage.from('site-media');
+                const upload = await storage.upload(uploadedPath, file, { contentType: file.type, upsert: false });
+                if (upload.error) throw upload.error;
+                value = storage.getPublicUrl(uploadedPath).data.publicUrl;
+            }
+            if (!value || ((contentType === 'image' || contentType === 'link') && !isSafeWebsiteUrl(value))) {
+                if (uploadedPath) {
+                    const cleanup = await window.MCMBackend.getClient().storage.from('site-media').remove([uploadedPath]);
+                    if (cleanup.error) {
+                        throw new Error('The image URL was invalid and the uploaded image could not be removed; contact an administrator.');
+                    }
+                }
+                throw new Error(contentType === 'text'
+                    ? 'Enter the text to publish.'
+                    : 'Enter a valid HTTPS URL or upload an image.');
+            }
+            try {
+                await window.MCMBackend.admin.create('content', {
+                    page_key: pageKey,
+                    content_key: String(data.get('contentKey')).trim(),
+                    content_type: contentType,
+                    value: value,
+                    is_published: String(data.get('contentPublished')) === 'true'
+                });
+            } catch (error) {
+                if (uploadedPath) {
+                    const cleanup = await window.MCMBackend.getClient().storage.from('site-media').remove([uploadedPath]);
+                    if (cleanup.error) {
+                        throw new Error(error.message + ' The uploaded image could not be removed; contact an administrator.');
+                    }
+                }
+                throw error;
+            }
+        });
+        const contentEditForm = makeForm('Edit existing page content', [
+            makeField('Content record', 'contentEditRecord', 'select', {
+                required: true,
+                items: records.content,
+                label: function (item) { return item.page_key + ' / ' + item.content_key; }
+            }),
+            makeField('Page key', 'editContentPage', 'text', { required: true, maxLength: 80, pattern: '[a-z0-9-]{1,80}' }),
+            makeField('Content key', 'editContentKey', 'text', { required: true, maxLength: 120, pattern: '[a-z0-9._-]{1,120}' }),
+            makeField('Content type', 'editContentType', 'select', {
+                required: true,
+                items: [
+                    { id: 'text', name: 'Text' },
+                    { id: 'image', name: 'Image URL' },
+                    { id: 'link', name: 'Link URL' }
+                ],
+                label: function (item) { return item.name; }
+            }),
+            makeField('Text or URL', 'editContentValue', 'textarea', { rows: 4, maxLength: 10000 }),
+            makeField('Optional replacement image (JPEG, PNG or WebP; up to 10 MB)', 'editContentImage', 'file', {}),
+            makeField('Published', 'editContentPublished', 'select', {
+                required: true,
+                items: [
+                    { id: 'true', name: 'Yes' },
+                    { id: 'false', name: 'No, draft' }
+                ],
+                label: function (item) { return item.name; }
+            })
+        ], async function (data) {
+            const contentType = String(data.get('editContentType'));
+            const file = data.get('editContentImage');
+            let value = String(data.get('editContentValue') || '').trim();
+            let uploadedPath = null;
+            if (contentType === 'image' && file instanceof File && file.size > 0) {
+                const allowedTypes = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+                if (!allowedTypes[file.type] || file.size > 10 * 1024 * 1024) {
+                    throw new Error('Choose a JPEG, PNG or WebP image smaller than 10 MB.');
+                }
+                uploadedPath = 'site/' + String(data.get('editContentPage')).trim() + '/' +
+                    crypto.randomUUID() + '.' + allowedTypes[file.type];
+                const storage = window.MCMBackend.getClient().storage.from('site-media');
+                const upload = await storage.upload(uploadedPath, file, { contentType: file.type, upsert: false });
+                if (upload.error) throw upload.error;
+                value = storage.getPublicUrl(uploadedPath).data.publicUrl;
+            }
+            if (!value || ((contentType === 'image' || contentType === 'link') && !isSafeWebsiteUrl(value))) {
+                if (uploadedPath) {
+                    const cleanup = await window.MCMBackend.getClient().storage.from('site-media').remove([uploadedPath]);
+                    if (cleanup.error) {
+                        throw new Error('The image URL was invalid and the uploaded image could not be removed; contact an administrator.');
+                    }
+                }
+                throw new Error('Enter text or a valid HTTPS URL for this content type.');
+            }
+            try {
+                await window.MCMBackend.admin.update('content', data.get('contentEditRecord'), {
+                    page_key: String(data.get('editContentPage')).trim(),
+                    content_key: String(data.get('editContentKey')).trim(),
+                    content_type: contentType,
+                    value: value,
+                    is_published: String(data.get('editContentPublished')) === 'true'
+                });
+            } catch (error) {
+                if (uploadedPath) {
+                    const cleanup = await window.MCMBackend.getClient().storage.from('site-media').remove([uploadedPath]);
+                    if (cleanup.error) {
+                        throw new Error(error.message + ' The uploaded image could not be removed; contact an administrator.');
+                    }
+                }
+                throw error;
+            }
+        });
+        contentEditForm.id = 'contentEditForm';
+        const editContentElement = contentEditForm.querySelector('form');
+        editContentElement.elements.contentEditRecord.addEventListener('change', function () {
+            const record = records.content.find(function (item) {
+                return item.id === editContentElement.elements.contentEditRecord.value;
+            });
+            if (!record) return;
+            editContentElement.elements.editContentPage.value = record.page_key;
+            editContentElement.elements.editContentKey.value = record.content_key;
+            editContentElement.elements.editContentType.value = record.content_type;
+            editContentElement.elements.editContentValue.value = record.value;
+            editContentElement.elements.editContentPublished.value = String(record.is_published);
+        });
+        [packageForm, contentForm, contentEditForm].forEach(function (form) {
+            websiteForms.appendChild(form);
+        });
+        websiteSection.appendChild(websiteForms);
+        const websiteTablesPanel = makePanel('Published website data');
+        const websiteTables = element('div', 'backend-tables');
+        websiteTables.id = 'website-tables';
+        websiteTablesPanel.appendChild(websiteTables);
+        websiteSection.appendChild(websiteTablesPanel);
+
+        const bookingStatusForm = makeForm('Update booking request', [
+            makeField('Booking', 'bookingRecord', 'select', {
+                required: true,
+                items: records.bookings,
+                label: function (item) { return item.booking_code + ' — ' + item.client_name; }
+            }),
+            makeField('Status', 'bookingStatus', 'select', {
+                required: true,
+                items: [
+                    { id: 'new', name: 'New' },
+                    { id: 'contacted', name: 'Contacted' },
+                    { id: 'confirmed', name: 'Confirmed' },
+                    { id: 'completed', name: 'Completed' },
+                    { id: 'cancelled', name: 'Cancelled' }
+                ],
+                label: function (item) { return item.name; }
+            }),
+            makeField('Internal notes', 'bookingNotes', 'textarea', { maxLength: 5000 })
+        ], async function (data) {
+            await window.MCMBackend.admin.update('bookings', data.get('bookingRecord'), {
+                status: String(data.get('bookingStatus')),
+                admin_notes: String(data.get('bookingNotes') || '').trim()
+            });
+        });
+        bookingStatusForm.id = 'bookingStatusForm';
+        const bookingEditElement = bookingStatusForm.querySelector('form');
+        bookingEditElement.elements.bookingRecord.addEventListener('change', function () {
+            const record = records.bookings.find(function (item) {
+                return item.id === bookingEditElement.elements.bookingRecord.value;
+            });
+            if (!record) return;
+            bookingEditElement.elements.bookingStatus.value = record.status;
+            bookingEditElement.elements.bookingNotes.value = record.admin_notes || '';
+        });
+        bookingsSection.append(bookingStatusForm);
+        const bookingTablesPanel = makePanel('Booking requests');
+        const bookingTables = element('div', 'backend-tables');
+        bookingTables.id = 'booking-tables';
+        bookingTablesPanel.appendChild(bookingTables);
+        bookingsSection.appendChild(bookingTablesPanel);
+
+        const orderForm = makeForm('Create admin order', [
+            makeField('Learner', 'orderLearner', 'select', { required: true, items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } }),
+            makeField('Photos (optional; select multiple)', 'orderPhotos', 'select', { multiple: true, items: records.photos, label: function (item) { return item.title; } }),
+            makeField('Packages (optional; select multiple)', 'orderPackages', 'select', { multiple: true, items: records.packages, label: function (item) { return item.name; } }),
+            makeField('Admin notes', 'orderAdminNotes', 'textarea', { maxLength: 5000 })
+        ], async function (data) {
+            const result = await window.MCMBackend.admin.createOrder(
+                String(data.get('orderLearner')),
+                data.getAll('orderPhotos').filter(Boolean),
+                data.getAll('orderPackages').filter(Boolean),
+                String(data.get('orderAdminNotes') || '').trim()
+            );
+            setStatus('Order ' + result.order_code + ' created.');
+        });
+        orderForm.id = 'orderCreateForm';
+        orderForm.querySelector('form').elements.orderLearner.addEventListener('change', updateDataSelectors);
+        const orderStatusForm = makeForm('Update order status', [
+            makeField('Order', 'orderRecord', 'select', {
+                required: true,
+                items: records.orders,
+                label: function (item) { return item.order_code + ' — ' + item.status; }
+            }),
+            makeField('Order status', 'orderStatus', 'select', {
+                required: true,
+                items: [
+                    { id: 'submitted', name: 'Submitted' },
+                    { id: 'confirmed', name: 'Confirmed' },
+                    { id: 'cancelled', name: 'Cancelled' },
+                    { id: 'complete', name: 'Complete' }
+                ],
+                label: function (item) { return item.name; }
+            }),
+            makeField('Admin notes', 'orderEditNotes', 'textarea', { maxLength: 5000 })
+        ], async function (data) {
+            await window.MCMBackend.admin.update('orders', data.get('orderRecord'), {
+                status: String(data.get('orderStatus')),
+                admin_notes: String(data.get('orderEditNotes') || '').trim()
+            });
+        });
+        orderStatusForm.id = 'orderStatusForm';
+        const orderEditElement = orderStatusForm.querySelector('form');
+        orderEditElement.elements.orderRecord.addEventListener('change', function () {
+            const record = records.orders.find(function (item) {
+                return item.id === orderEditElement.elements.orderRecord.value;
+            });
+            if (!record) return;
+            orderEditElement.elements.orderStatus.value = record.status;
+            orderEditElement.elements.orderEditNotes.value = record.admin_notes || '';
+        });
+        [orderForm, orderStatusForm].forEach(function (form) {
+            ordersSection.appendChild(form);
+        });
+        const orderTablesPanel = makePanel('Orders');
+        const orderTables = element('div', 'backend-tables');
+        orderTables.id = 'order-tables';
+        orderTablesPanel.appendChild(orderTables);
+        ordersSection.appendChild(orderTablesPanel);
+
+        const productionForm = makeForm('Update production and delivery', [
+            makeField('Order', 'productionOrder', 'select', {
+                required: true,
+                items: records.orders,
+                label: function (item) { return item.order_code + ' — ' + item.status; }
+            }),
+            makeField('Production status', 'productionStatus', 'select', {
+                required: true,
+                items: [
+                    { id: 'pending', name: 'Pending' },
+                    { id: 'in_production', name: 'In production' },
+                    { id: 'ready', name: 'Ready' }
+                ],
+                label: function (item) { return item.name; }
+            }),
+            makeField('Delivery status', 'deliveryStatus', 'select', {
+                required: true,
+                items: [
+                    { id: 'not_started', name: 'Not started' },
+                    { id: 'ready_for_collection', name: 'Ready for collection' },
+                    { id: 'dispatched', name: 'Dispatched' },
+                    { id: 'delivered', name: 'Delivered' }
+                ],
+                label: function (item) { return item.name; }
+            })
+        ], async function (data) {
+            await window.MCMBackend.admin.update('orders', data.get('productionOrder'), {
+                production_status: String(data.get('productionStatus')),
+                delivery_status: String(data.get('deliveryStatus'))
+            });
+        });
+        productionForm.id = 'productionStatusForm';
+        const productionEditElement = productionForm.querySelector('form');
+        productionEditElement.elements.productionOrder.addEventListener('change', function () {
+            const record = records.orders.find(function (item) {
+                return item.id === productionEditElement.elements.productionOrder.value;
+            });
+            if (!record) return;
+            productionEditElement.elements.productionStatus.value = record.production_status;
+            productionEditElement.elements.deliveryStatus.value = record.delivery_status;
+        });
+        productionSection.appendChild(productionForm);
+        const productionTablesPanel = makePanel('Production queue');
+        const productionTables = element('div', 'backend-tables');
+        productionTables.id = 'production-tables';
+        productionTablesPanel.appendChild(productionTables);
+        productionSection.appendChild(productionTablesPanel);
+
         const settingsSection = sectionRoot.querySelector('[data-admin-section="settings"]');
         const accountPanel = makePanel('Administrator account');
         const detailList = element('dl', 'detail-list');
@@ -616,6 +996,11 @@
         });
         accountPanel.appendChild(detailList);
         settingsSection.appendChild(accountPanel);
+        const auditPanel = makePanel('Recent admin audit log');
+        const auditTable = element('div', 'backend-tables');
+        auditTable.id = 'audit-tables';
+        auditPanel.appendChild(auditTable);
+        settingsSection.appendChild(auditPanel);
 
         updateDataSelectors();
         bindWorkspaceControls();
@@ -627,31 +1012,55 @@
     }
 
     async function refreshData() {
-        const [schools, projects, classes, learners, photos, audit] = await Promise.all([
+        const [schools, projects, classes, learners, photos, packages, audit] = await Promise.all([
             window.MCMBackend.admin.list('schools'),
             window.MCMBackend.admin.list('projects'),
             window.MCMBackend.admin.list('classes'),
             window.MCMBackend.admin.list('learners'),
             window.MCMBackend.admin.list('photos'),
+            window.MCMBackend.admin.list('packages'),
             window.MCMBackend.admin.list('audit')
         ]);
+        const optionalCollections = await Promise.all(['content', 'bookings', 'orders', 'orderItems'].map(async function (name) {
+            try {
+                return { name: name, data: await window.MCMBackend.admin.list(name), error: null };
+            } catch (error) {
+                return { name: name, data: [], error: error };
+            }
+        }));
         records.schools = schools;
         records.projects = projects;
         records.classes = classes;
         records.learners = learners;
         records.photos = photos;
+        records.packages = packages;
+        optionalCollections.forEach(function (result) {
+            records[result.name] = result.data;
+        });
         records.audit = audit;
         updateDataSelectors();
         renderWorkspaceTables();
         renderOverview();
-        setStatus('Admin data loaded.');
+        const unavailable = optionalCollections.filter(function (result) { return result.error; });
+        if (unavailable.length) {
+            setStatus('Some workflow data is unavailable: ' +
+                unavailable.map(function (result) {
+                    return result.name + ' (' + result.error.message + ')';
+                }).join('; ') + '. Check the incremental migration, RLS and connectivity.', true);
+        } else {
+            setStatus('Admin data loaded.');
+        }
     }
 
     function renderWorkspaceTables() {
         const schoolContainer = document.getElementById('school-tables');
         const photoContainer = document.getElementById('photo-tables');
-        if (!schoolContainer || !photoContainer) return;
-        schoolContainer.replaceChildren(
+        const websiteContainer = document.getElementById('website-tables');
+        const bookingContainer = document.getElementById('booking-tables');
+        const orderContainer = document.getElementById('order-tables');
+        const productionContainer = document.getElementById('production-tables');
+        const auditContainer = document.getElementById('audit-tables');
+        if (schoolContainer) schoolContainer.replaceChildren(
             makeTable('Schools', ['Name', 'Slug'], records.schools, function (item) {
             return [item.name, item.slug];
         }, {
@@ -680,7 +1089,7 @@
             success: 'Learner status updated.'
         })
         );
-        photoContainer.replaceChildren(
+        if (photoContainer) photoContainer.replaceChildren(
             makeTable('Photos', ['Title', 'Learner ID', 'Order'], records.photos, function (item) {
                 return [item.title, item.learner_id, item.display_order];
             }, {
@@ -688,6 +1097,96 @@
                 label: function (item) { return item.is_published ? 'Unpublish' : 'Publish'; },
                 changes: function (item) { return { is_published: !item.is_published }; },
                 success: 'Photo visibility updated.'
+            })
+        );
+        if (websiteContainer) websiteContainer.replaceChildren(
+            makeTable('Photography packages', ['Name', 'Price', 'Description'], records.packages, function (item) {
+                return [item.name, (Number(item.price_cents) / 100).toFixed(2), item.description];
+            }, {
+                collection: 'packages',
+                label: function (item) { return item.is_active ? 'Deactivate' : 'Activate'; },
+                changes: function (item) { return { is_active: !item.is_active }; },
+                success: 'Package status updated.'
+            }),
+            makeTable('Page content', ['Page', 'Content key', 'Type', 'Value'], records.content, function (item) {
+                return [item.page_key, item.content_key, item.content_type, item.value];
+            }, {
+                collection: 'content',
+                label: function (item) { return item.is_published ? 'Unpublish' : 'Publish'; },
+                changes: function (item) { return { is_published: !item.is_published }; },
+                success: 'Website content visibility updated.'
+            })
+        );
+        if (bookingContainer) bookingContainer.replaceChildren(
+            makeTable('Booking requests', ['Reference', 'Client', 'Email', 'Service', 'Preferred date', 'Status'], records.bookings, function (item) {
+                return [item.booking_code, item.client_name, item.email, item.service_type, item.preferred_date, item.status];
+            }, {
+                collection: 'bookings',
+                label: function (item) {
+                    if (item.status === 'new') return 'Mark contacted';
+                    if (item.status === 'contacted') return 'Confirm';
+                    if (item.status === 'confirmed') return 'Complete';
+                    return 'Reopen';
+                },
+                changes: function (item) {
+                    const next = { new: 'contacted', contacted: 'confirmed', confirmed: 'completed', completed: 'new', cancelled: 'new' };
+                    return { status: next[item.status] || 'new' };
+                },
+                success: 'Booking status updated.'
+            })
+        );
+        const orderItemsByOrder = {};
+        records.orderItems.forEach(function (item) {
+            orderItemsByOrder[item.order_id] = (orderItemsByOrder[item.order_id] || 0) + 1;
+        });
+        const learnerById = {};
+        records.learners.forEach(function (learner) {
+            learnerById[learner.id] = learner.display_name;
+        });
+        const orderRows = records.orders.slice().sort(function (left, right) {
+            return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+        });
+        const orderTable = makeTable('Order requests', ['Reference', 'Learner', 'Source', 'Items', 'Status', 'Production', 'Delivery'], orderRows, function (item) {
+            return [
+                item.order_code,
+                learnerById[item.learner_id] || 'Learner record',
+                item.source,
+                orderItemsByOrder[item.id] || 0,
+                item.status,
+                item.production_status,
+                item.delivery_status
+            ];
+        }, {
+            collection: 'orders',
+            label: function (item) {
+                if (item.status === 'submitted') return 'Confirm';
+                if (item.status === 'confirmed') return 'Complete';
+                return 'Reopen';
+            },
+            changes: function (item) {
+                const next = { submitted: 'confirmed', confirmed: 'complete', cancelled: 'submitted', complete: 'confirmed' };
+                return { status: next[item.status] || 'submitted' };
+            },
+            success: 'Order status updated.'
+        });
+        if (orderContainer) orderContainer.replaceChildren(orderTable);
+        if (productionContainer) productionContainer.replaceChildren(
+            makeTable('Production and delivery queue', ['Reference', 'Learner', 'Status', 'Production', 'Delivery', 'Created'], orderRows, function (item) {
+                return [
+                    item.order_code,
+                    learnerById[item.learner_id] || 'Learner record',
+                    item.status,
+                    item.production_status,
+                    item.delivery_status,
+                    new Date(item.created_at).toLocaleDateString()
+                ];
+            })
+        );
+        if (auditContainer) auditContainer.replaceChildren(
+            makeTable('Audit log', ['Action', 'Table', 'Record', 'Date'], records.audit.slice().sort(function (left, right) {
+                return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+            }).slice(0, 100), function (item) {
+                return [item.action, item.resource_table, item.resource_id, new Date(item.created_at).toLocaleString()];
             })
         );
     }
