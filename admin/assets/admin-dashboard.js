@@ -14,6 +14,9 @@
     let learnerQrDialog;
     let learnerQrImage;
     let learnerQrDownload;
+    let learnerQrLink;
+    let learnerQrCopy;
+    let learnerQrMessage;
     let currentAdminUserId = '';
     const records = {
         schools: [],
@@ -39,6 +42,84 @@
         downloadRequests: [],
         adminUsers: []
     };
+    const cmsPages = [
+        {
+            id: 'index',
+            name: 'Home page',
+            fields: [
+                { id: 'hero.eyebrow', name: 'Introductory label', type: 'text' },
+                { id: 'hero.title', name: 'Main heading', type: 'text' },
+                { id: 'hero.description', name: 'Introduction', type: 'text' },
+                { id: 'hero.cta-book', name: 'Book button link', type: 'link' },
+                { id: 'hero.image-primary', name: 'Main hero photo', type: 'image' },
+                { id: 'about.title', name: 'About heading', type: 'text' },
+                { id: 'about.description', name: 'About introduction', type: 'text' }
+            ]
+        },
+        {
+            id: 'about',
+            name: 'About page',
+            fields: [
+                { id: 'story.eyebrow', name: 'Section label', type: 'text' },
+                { id: 'story.title', name: 'Story heading', type: 'text' },
+                { id: 'team.image-primary', name: 'Team photo', type: 'image' }
+            ]
+        },
+        {
+            id: 'contact',
+            name: 'Contact page',
+            fields: [
+                { id: 'booking.eyebrow', name: 'Section label', type: 'text' },
+                { id: 'booking.title', name: 'Booking heading', type: 'text' },
+                { id: 'booking.description', name: 'Booking introduction', type: 'text' }
+            ]
+        },
+        {
+            id: 'service',
+            name: 'Services page',
+            fields: [
+                { id: 'services.eyebrow', name: 'Section label', type: 'text' },
+                { id: 'services.title', name: 'Page heading', type: 'text' }
+            ]
+        },
+        {
+            id: 'portfolio',
+            name: 'Portfolio page',
+            fields: [
+                { id: 'gallery.eyebrow', name: 'Section label', type: 'text' },
+                { id: 'gallery.title', name: 'Gallery heading', type: 'text' },
+                { id: 'gallery.image-primary', name: 'Featured gallery photo', type: 'image' }
+            ]
+        },
+        {
+            id: 'school-photography',
+            name: 'School Photography page',
+            fields: [
+                { id: 'hero.eyebrow', name: 'Section label', type: 'text' },
+                { id: 'hero.title', name: 'Page heading', type: 'text' },
+                { id: 'hero.description', name: 'Introduction', type: 'text' },
+                { id: 'hero.image', name: 'Featured school photo', type: 'image' },
+                { id: 'packages.eyebrow', name: 'Packages label', type: 'text' },
+                { id: 'packages.title', name: 'Packages heading', type: 'text' }
+            ]
+        },
+        { id: 'service-weddings', name: 'Wedding photography page', fields: [
+            { id: 'hero.eyebrow', name: 'Section label', type: 'text' },
+            { id: 'hero.title', name: 'Page heading', type: 'text' }
+        ] },
+        { id: 'service-portraits', name: 'Portrait photography page', fields: [
+            { id: 'hero.eyebrow', name: 'Section label', type: 'text' },
+            { id: 'hero.title', name: 'Page heading', type: 'text' }
+        ] },
+        { id: 'service-metric', name: 'Metric photography page', fields: [
+            { id: 'hero.eyebrow', name: 'Section label', type: 'text' },
+            { id: 'hero.title', name: 'Page heading', type: 'text' }
+        ] },
+        { id: 'service-fashion', name: 'Fashion photography page', fields: [
+            { id: 'hero.eyebrow', name: 'Section label', type: 'text' },
+            { id: 'hero.title', name: 'Page heading', type: 'text' }
+        ] }
+    ];
 
     function setStatus(message, isError) {
         [status, workspaceStatus].forEach(function (target) {
@@ -65,6 +146,16 @@
         return node;
     }
 
+    function makeTaskGroup(title, description, forms) {
+        const group = element('section', 'admin-task-group');
+        group.appendChild(element('h2', '', title));
+        if (description) group.appendChild(element('p', 'task-group-description', description));
+        const formGrid = element('div', 'backend-form-grid');
+        forms.forEach(function (form) { formGrid.appendChild(form); });
+        group.appendChild(formGrid);
+        return group;
+    }
+
     function formatCurrency(cents) {
         return new Intl.NumberFormat('en-ZA', {
             style: 'currency',
@@ -82,6 +173,21 @@
         return records.payments.find(function (payment) {
             return payment.order_id === orderId;
         }) || null;
+    }
+
+    function photoPublishBlockReason(photo) {
+        if (photo.is_archived) return 'Archived photos cannot be published.';
+        if (photo.is_published) return '';
+        if (!photo.learner_id) return 'Assign this photo to a learner first.';
+        if (!photo.preview_storage_path) return 'Generate a watermarked preview first.';
+        const learner = records.learners.find(function (record) { return record.id === photo.learner_id; });
+        if (!learner || !learner.is_active) return 'Activate the learner before publishing.';
+        if (learner.consent_status !== 'approved') return 'Record approved photo consent before publishing.';
+        const project = records.projects.find(function (record) { return record.id === photo.project_id; });
+        if (!project || project.status !== 'active') return 'Activate the school project before publishing.';
+        const school = records.schools.find(function (record) { return record.id === project.school_id; });
+        if (!school || !school.is_active) return 'Activate the school before publishing.';
+        return '';
     }
 
     function parseCsv(text) {
@@ -259,14 +365,36 @@
         return wrapper;
     }
 
+    function populateCmsContentKeys(pageControl, keyControl, selectedKey, keepUnknown) {
+        const page = cmsPages.find(function (item) { return item.id === pageControl.value; });
+        const fields = page ? page.fields : [];
+        keyControl.replaceChildren();
+        const prompt = element('option', '', 'Choose a page section…');
+        prompt.value = '';
+        keyControl.appendChild(prompt);
+        fields.forEach(function (field) {
+            const option = element('option', '', field.name);
+            option.value = field.id;
+            keyControl.appendChild(option);
+        });
+        if (keepUnknown && selectedKey && !fields.some(function (field) { return field.id === selectedKey; })) {
+            const option = element('option', '', 'Existing section: ' + selectedKey);
+            option.value = selectedKey;
+            keyControl.appendChild(option);
+        }
+        keyControl.value = selectedKey || '';
+        keyControl.disabled = fields.length === 0 && !keepUnknown;
+    }
+
     function makeForm(title, fields, onSubmit) {
-        const section = element('section', 'backend-module');
-        section.appendChild(element('h2', '', title));
+        const section = element('details', 'backend-module admin-form-disclosure');
+        section.open = title === 'Add school';
+        section.appendChild(element('summary', 'admin-form-summary', title));
         const form = element('form', 'backend-form backend-form--grid');
         fields.forEach(function (field) {
             form.appendChild(field);
         });
-        const submit = element('button', 'btn btn-primary', 'Save');
+        const submit = element('button', 'btn btn-primary', formSubmitLabel(title));
         submit.type = 'submit';
         form.appendChild(submit);
         form.addEventListener('submit', async function (event) {
@@ -275,9 +403,9 @@
             submit.disabled = true;
             setStatus('', false);
             try {
-                await onSubmit(new FormData(form), form);
+                const result = await onSubmit(new FormData(form), form);
                 form.reset();
-                setStatus(title + ' saved.');
+                setStatus(typeof result === 'string' ? result : title + ' saved.');
                 await refreshData();
             } catch (error) {
                 setStatus(error.message || 'The change could not be saved.', true);
@@ -287,6 +415,19 @@
         });
         section.appendChild(form);
         return section;
+    }
+
+    function formSubmitLabel(title) {
+        if (/^Add /i.test(title)) return title;
+        if (/^Create /i.test(title)) return title;
+        if (/^Import /i.test(title)) return 'Import learners';
+        if (/^Upload /i.test(title)) return 'Upload photos';
+        if (/^Set or reset learner PIN/i.test(title)) return 'Set learner PIN';
+        if (/^Record payment/i.test(title)) return 'Record payment';
+        if (/^Record or update photo consent/i.test(title)) return 'Save consent status';
+        if (/^Revoke /i.test(title)) return 'Revoke access';
+        if (/^Update /i.test(title)) return 'Update';
+        return 'Save changes';
     }
 
     function makeTable(title, headers, rows, rowValues, toggle) {
@@ -304,7 +445,9 @@
         headers.forEach(function (header) {
             headingRow.appendChild(element('th', '', header));
         });
-        if (toggle && !toggle.hideStatus) headingRow.appendChild(element('th', '', 'Status'));
+        if (toggle && !toggle.hideStatus) {
+            headingRow.appendChild(element('th', '', toggle.statusHeader || 'Status'));
+        }
         if (toggle && typeof toggle.actions === 'function') headingRow.appendChild(element('th', '', 'Actions'));
         head.appendChild(headingRow);
         const body = document.createElement('tbody');
@@ -318,6 +461,13 @@
                 const button = element('button', 'btn btn-sm btn-outline-primary', toggle.label(record));
                 button.type = 'button';
                 button.disabled = typeof toggle.disabled === 'function' && toggle.disabled(record);
+                const disabledReason = typeof toggle.disabledReason === 'function'
+                    ? toggle.disabledReason(record)
+                    : '';
+                if (disabledReason) {
+                    button.title = disabledReason;
+                    button.setAttribute('aria-label', toggle.label(record) + ': ' + disabledReason);
+                }
                 button.addEventListener('click', async function () {
                     button.disabled = true;
                     try {
@@ -340,11 +490,20 @@
             if (toggle && typeof toggle.actions === 'function') {
                 const actionsCell = document.createElement('td');
                 toggle.actions(record).forEach(function (action) {
-                    const actionButton = element('button', 'btn btn-sm btn-outline-secondary me-1 mb-1', action.label);
+                    const actionButton = element(
+                        'button',
+                        'btn btn-sm ' + (action.danger ? 'btn-outline-danger' : 'btn-outline-secondary') + ' me-1 mb-1',
+                        action.label
+                    );
                     actionButton.type = 'button';
                     actionButton.addEventListener('click', async function () {
                         actionButton.disabled = true;
                         try {
+                            if (typeof action.confirm === 'function' &&
+                                !window.confirm(action.confirm(record))) {
+                                actionButton.disabled = false;
+                                return;
+                            }
                             await action.run(record);
                             setStatus(action.success || action.label + ' complete.');
                             await refreshData();
@@ -365,21 +524,63 @@
         return section;
     }
 
+    function projectOptionLabel(project) {
+        const school = records.schools.find(function (item) { return item.id === project.school_id; });
+        return (school ? school.name + ' — ' : '') + project.name + ' (' + project.school_year + ')';
+    }
+
+    function learnerClassOptionLabel(classRecord) {
+        const project = records.projects.find(function (item) { return item.id === classRecord.project_id; });
+        const school = project && records.schools.find(function (item) { return item.id === project.school_id; });
+        return [school && school.name, project && project.name + ' (' + project.school_year + ')', classRecord.name]
+            .filter(Boolean)
+            .join(' — ');
+    }
+
+    function generateLearnerReference() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return 'LRN-' + window.crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase();
+        }
+        return 'LRN-' + Date.now().toString(36).toUpperCase() + '-' +
+            Math.random().toString(36).slice(2, 8).toUpperCase();
+    }
+
+    function setSelectHint(control, message) {
+        const wrapper = control.closest('.backend-field');
+        if (!wrapper) return;
+        let hint = wrapper.querySelector('.backend-field-hint');
+        if (!hint) {
+            hint = element('small', 'backend-field-hint');
+            hint.id = control.id + '-hint';
+            wrapper.appendChild(hint);
+        }
+        hint.textContent = message || '';
+        hint.hidden = !message;
+        if (message) {
+            control.setAttribute('aria-describedby', hint.id);
+        } else {
+            control.removeAttribute('aria-describedby');
+        }
+    }
+
     function updateDataSelectors() {
         const selectors = [
+            { name: 'contentPage', items: cmsPages, label: function (item) { return item.name; } },
+            { name: 'editContentPage', items: cmsPages, label: function (item) { return item.name; } },
             { name: 'projectSchool', items: records.schools, label: function (item) { return item.name; } },
             { name: 'packageRecord', items: records.packages, label: function (item) { return item.name; } },
-            { name: 'classProject', items: records.projects, label: function (item) { return item.name + ' (' + item.school_year + ')'; } },
-            { name: 'learnerClass', items: records.classes, label: function (item) { return item.name; } },
+            { name: 'classProject', items: records.projects, label: projectOptionLabel },
+            { name: 'learnerClass', items: records.classes, label: learnerClassOptionLabel },
             { name: 'projectEditSchool', items: records.schools, label: function (item) { return item.name; } },
-            { name: 'classEditProject', items: records.projects, label: function (item) { return item.name + ' (' + item.school_year + ')'; } },
-            { name: 'classEditRecord', items: records.classes, label: function (item) { return item.name; } },
+            { name: 'classEditProject', items: records.projects, label: projectOptionLabel },
+            { name: 'classEditRecord', items: records.classes, label: learnerClassOptionLabel },
             { name: 'learnerEditRecord', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
-            { name: 'learnerEditClass', items: records.classes, label: function (item) { return item.name; } },
-            { name: 'learnerCsvClass', items: records.classes, label: function (item) { return item.name; } },
+            { name: 'learnerEditClass', items: records.classes, label: learnerClassOptionLabel },
+            { name: 'learnerCsvClass', items: records.classes, label: learnerClassOptionLabel },
             { name: 'consentLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
             { name: 'pinLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
             { name: 'photoLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
+            { name: 'revokeAccessLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
             { name: 'orderLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
             { name: 'orderPhotos', items: records.photos, label: function (item) { return item.title; } },
             { name: 'orderPackages', items: records.packages.filter(function (item) { return item.is_active; }), label: function (item) { return item.name; } },
@@ -389,7 +590,7 @@
             { name: 'orderRecord', items: records.orders, label: function (item) { return item.order_code + ' — ' + item.status; } },
             { name: 'guardianLearner', items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
             { name: 'guardianRecord', items: records.guardians, label: function (item) { return item.full_name + (item.email ? ' — ' + item.email : ''); } },
-            { name: 'photoBatchProject', items: records.projects, label: function (item) { return item.name + ' (' + item.school_year + ')'; } },
+            { name: 'photoBatchProject', items: records.projects, label: projectOptionLabel },
             { name: 'photoAssignRecord', items: records.photos.filter(function (item) { return !item.is_archived; }), label: function (item) { return item.title + (item.learner_id ? ' — assigned' : ' — unassigned'); } },
             { name: 'photoAssignLearner', items: records.learners.filter(function (item) { return item.is_active; }), label: function (item) { return item.display_name + ' — ' + item.reference_code; } },
             { name: 'photoPriceRecord', items: records.photos.filter(function (item) { return item.learner_id && !item.is_archived; }), label: function (item) { return item.title; } },
@@ -398,6 +599,37 @@
             { name: 'projectEditRecord', items: records.projects, label: function (item) { return item.name + ' (' + item.school_year + ')'; } },
             { name: 'schoolEditRecord', items: records.schools, label: function (item) { return item.name; } }
         ];
+        const emptyHints = {
+            projectSchool: 'Add a school before creating a project.',
+            packageRecord: 'Add a package before editing package details.',
+            classProject: 'Create a school project before adding classes.',
+            learnerClass: 'Add a class before registering learners.',
+            classEditProject: 'Create a school project first.',
+            classEditRecord: 'Add a class before editing class details.',
+            learnerEditRecord: 'Add a learner before editing learner details.',
+            learnerEditClass: 'Add a class before moving a learner.',
+            learnerCsvClass: 'Add a class before importing learners.',
+            consentLearner: 'Add a learner before recording photo consent.',
+            pinLearner: 'Add a learner before setting a PIN.',
+            revokeAccessLearner: 'Add a learner before revoking gallery sessions.',
+            photoLearner: 'Add a learner before assigning photos.',
+            orderLearner: 'Add learners before creating orders.',
+            orderPackages: 'Add an active package before creating package orders.',
+            bookingRecord: 'No booking requests have been received yet.',
+            bookingService: 'Add an available photography service first.',
+            contentEditRecord: 'Add website content before editing it.',
+            orderRecord: 'No orders are available to update yet.',
+            guardianLearner: 'Add a learner before linking a guardian.',
+            guardianRecord: 'Add a parent or guardian before linking them.',
+            photoBatchProject: 'Create a school project before uploading photos.',
+            photoAssignRecord: 'Upload photos before assigning them to learners.',
+            photoAssignLearner: 'Add an active learner before assigning photos.',
+            photoPriceRecord: 'Assign a photo before changing its price.',
+            paymentOrder: 'Create an order before recording payment.',
+            serviceRecord: 'Add a photography service before editing it.',
+            projectEditRecord: 'Create a school project before editing it.',
+            schoolEditRecord: 'Add a school before editing its details.'
+        };
         selectors.forEach(function (selector) {
             const control = document.querySelector('#admin-' + selector.name);
             if (!control) return;
@@ -419,6 +651,21 @@
                 control.value = previous[0];
             }
             control.disabled = selector.items.length === 0;
+            setSelectHint(control, control.disabled ? emptyHints[selector.name] : '');
+        });
+        const cmsFieldControls = [
+            ['contentPage', 'contentKey'],
+            ['editContentPage', 'editContentKey']
+        ];
+        cmsFieldControls.forEach(function (names) {
+            const pageControl = document.getElementById('admin-' + names[0]);
+            const keyControl = document.getElementById('admin-' + names[1]);
+            if (!pageControl || !keyControl) return;
+            const selectedKey = keyControl.value;
+            populateCmsContentKeys(pageControl, keyControl, selectedKey, names[0] === 'editContentPage');
+            pageControl.onchange = function () {
+                populateCmsContentKeys(pageControl, keyControl, '', names[0] === 'editContentPage');
+            };
         });
         const orderLearner = document.getElementById('admin-orderLearner');
         const orderPhotos = document.getElementById('admin-orderPhotos');
@@ -437,6 +684,10 @@
                 orderPhotos.appendChild(option);
             });
             orderPhotos.disabled = learnerPhotos.length === 0;
+            setSelectHint(
+                orderPhotos,
+                orderPhotos.disabled ? 'This learner has no photos available for an order yet.' : ''
+            );
         }
         [
             ['contentEditRecord', 'contentEditForm'],
@@ -526,6 +777,184 @@
         if (toggle) toggle.setAttribute('aria-expanded', 'false');
     }
 
+    function openAdminTask(sectionId, formId, fieldId, value) {
+        activateSection(sectionId);
+        const target = formId && formId.charAt(0) === '#'
+            ? sectionRoot.querySelector(formId)
+            : document.getElementById(formId);
+        if (!target) return;
+        const disclosure = target.closest('details');
+        if (disclosure) disclosure.open = true;
+        const field = fieldId ? document.getElementById(fieldId) : null;
+        if (field && value && Array.prototype.some.call(field.options || [], function (option) {
+            return option.value === value;
+        })) {
+            field.value = value;
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const focusTarget = field || (disclosure ? disclosure.querySelector('summary') : target);
+        focusTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof focusTarget.focus === 'function') focusTarget.focus({ preventScroll: true });
+    }
+
+    function appendProjectReadiness(section) {
+        const panel = makePanel('School project readiness');
+        const projects = records.projects.slice().sort(function (left, right) {
+            if ((left.status === 'active') !== (right.status === 'active')) {
+                return left.status === 'active' ? -1 : 1;
+            }
+            return new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime();
+        }).slice(0, 4);
+
+        if (!projects.length) {
+            const hasSchools = records.schools.length > 0;
+            panel.appendChild(element(
+                'p',
+                'empty-state',
+                hasSchools
+                    ? 'Create a school photography project to see its setup and gallery progress here.'
+                    : 'Register a school first. Its photography projects and gallery progress will appear here.'
+            ));
+            const createProject = element('button', 'text-action', hasSchools ? 'Create a school project' : 'Register a school');
+            createProject.type = 'button';
+            createProject.addEventListener('click', function () {
+                openAdminTask('schools', hasSchools ? 'projectForm' : 'schoolForm');
+            });
+            panel.appendChild(createProject);
+            section.appendChild(panel);
+            return;
+        }
+
+        projects.forEach(function (project) {
+            const school = records.schools.find(function (item) { return item.id === project.school_id; });
+            const schoolClasses = records.classes.filter(function (item) { return item.project_id === project.id; });
+            const classIds = schoolClasses.map(function (item) { return item.id; });
+            const learners = records.learners.filter(function (item) { return classIds.includes(item.class_id) && item.is_active; });
+            const photos = records.photos.filter(function (item) {
+                return item.project_id === project.id && !item.is_archived;
+            });
+            const assignedPhotos = photos.filter(function (item) { return Boolean(item.learner_id); });
+            const publishedPhotos = photos.filter(function (item) { return item.is_published; });
+            const consentedLearners = learners.filter(function (item) { return item.consent_status === 'approved'; });
+            const schoolActive = Boolean(school && school.is_active);
+            const consentComplete = learners.length > 0 && consentedLearners.length === learners.length;
+            const assignmentsComplete = photos.length > 0 && assignedPhotos.length === photos.length;
+            const steps = [
+                {
+                    label: 'School and project active',
+                    detail: schoolActive && project.status === 'active'
+                        ? 'Ready'
+                        : (!schoolActive ? 'School inactive' : 'Project ' + project.status),
+                    complete: schoolActive && project.status === 'active',
+                    action: !schoolActive ? 'Review school' : 'Activate project',
+                    section: 'schools',
+                    form: !schoolActive ? 'schoolEditForm' : 'projectEditForm',
+                    field: !schoolActive ? 'admin-schoolEditRecord' : 'admin-projectEditRecord',
+                    value: !schoolActive ? project.school_id : project.id
+                },
+                {
+                    label: 'Classes',
+                    detail: schoolClasses.length + ' set up',
+                    complete: schoolClasses.length > 0,
+                    action: 'Add a class',
+                    section: 'schools',
+                    form: 'classForm',
+                    field: 'admin-classProject',
+                    value: project.id
+                },
+                {
+                    label: 'Learners',
+                    detail: learners.length + ' active',
+                    complete: learners.length > 0,
+                    action: 'Add learners',
+                    section: 'schools',
+                    form: 'learnerForm',
+                    field: 'admin-learnerClass',
+                    value: (schoolClasses[0] || {}).id
+                },
+                {
+                    label: 'Photo consent',
+                    detail: learners.length
+                        ? consentedLearners.length + ' of ' + learners.length + ' approved'
+                        : 'Add learners first',
+                    complete: consentComplete,
+                    action: 'Review consent',
+                    section: 'schools',
+                    form: 'consentForm',
+                    field: 'admin-consentLearner',
+                    value: (learners.find(function (item) { return item.consent_status !== 'approved'; }) || {}).id
+                },
+                {
+                    label: 'Photo assignment',
+                    detail: photos.length
+                        ? assignedPhotos.length + ' of ' + photos.length + ' assigned'
+                        : 'Upload photos first',
+                    complete: assignmentsComplete,
+                    action: photos.length ? 'Assign photos' : 'Upload photos',
+                    section: 'photos',
+                    form: photos.length ? 'photoAssignForm' : 'photoUploadForm',
+                    field: photos.length ? 'admin-photoAssignRecord' : 'admin-photoBatchProject',
+                    value: photos.length
+                        ? ((photos.find(function (item) { return !item.learner_id; }) || {}).id)
+                        : project.id
+                },
+                {
+                    label: 'Gallery publishing',
+                    detail: publishedPhotos.length
+                        ? publishedPhotos.length + ' photo' + (publishedPhotos.length === 1 ? '' : 's') + ' published'
+                        : 'No photos published',
+                    complete: publishedPhotos.length > 0,
+                    action: 'Review photo library',
+                    section: 'photos',
+                    form: '#photo-tables'
+                }
+            ];
+            const completed = steps.filter(function (step) { return step.complete; }).length;
+            const card = element('details', 'project-readiness-card');
+            const summary = element('summary', 'project-readiness-summary');
+            const heading = element('div', 'project-readiness-heading');
+            const name = element('div');
+            name.append(
+                element('h4', '', project.name),
+                element('p', '', (school ? school.name : 'School unavailable') + ' · ' + project.school_year)
+            );
+            const progressText = element('span', 'project-readiness-progress', completed + ' of ' + steps.length + ' steps');
+            heading.append(name, progressText);
+            const progress = document.createElement('progress');
+            progress.className = 'project-readiness-meter';
+            progress.max = steps.length;
+            progress.value = completed;
+            progress.setAttribute('aria-label', project.name + ' setup progress');
+            summary.append(heading, progress);
+            const stepList = element('ul', 'project-readiness-list');
+            steps.forEach(function (step) {
+                const row = element('li', step.complete ? 'is-complete' : 'is-pending');
+                const copy = element('span', 'project-readiness-copy');
+                copy.append(element('strong', '', step.label), element('small', '', step.detail));
+                const action = element('button', 'text-action', step.complete ? 'Done' : step.action);
+                action.type = 'button';
+                action.disabled = step.complete;
+                action.addEventListener('click', function () {
+                    openAdminTask(step.section, step.form, step.field, step.value);
+                });
+                row.append(copy, action);
+                stepList.appendChild(row);
+            });
+            card.append(summary, stepList, element('p', 'project-readiness-note', 'PIN setup remains a separate learner-access step and is not included in this progress count.'));
+            panel.appendChild(card);
+        });
+
+        if (records.projects.length > projects.length) {
+            const allProjects = element('button', 'text-action project-readiness-all', 'Manage all projects');
+            allProjects.type = 'button';
+            allProjects.addEventListener('click', function () {
+                openAdminTask('schools', 'projectEditForm');
+            });
+            panel.appendChild(allProjects);
+        }
+        section.appendChild(panel);
+    }
+
     function renderOverview() {
         const section = sectionRoot.querySelector('[data-admin-section="overview"]');
         if (!section) return;
@@ -566,58 +995,107 @@
             metrics.appendChild(card);
         });
         section.appendChild(metrics);
+        appendProjectReadiness(section);
 
         const grid = element('div', 'content-grid');
-        const attention = makePanel('Needs attention');
+        const attention = makePanel('Next actions');
         attention.id = 'attention-panel';
         const attentionList = element('ul', 'attention-list');
-        const pendingConsent = records.learners.filter(function (learner) {
-            return learner.consent_status === 'pending';
-        }).length;
-        const unpublished = records.photos.filter(function (photo) {
-            return !photo.is_published;
+        const learnersNeedingConsent = records.learners.filter(function (learner) {
+            return learner.is_active && learner.consent_status !== 'approved';
+        });
+        const publishableUnpublished = records.photos.filter(function (photo) {
+            return !photo.is_archived && !photo.is_published && !photoPublishBlockReason(photo);
         }).length;
         const newBookings = records.bookings.filter(function (booking) {
             return booking.status === 'new';
-        }).length;
+        });
         const submittedOrders = records.orders.filter(function (order) {
             return order.status === 'submitted';
-        }).length;
-        const unpaidOrders = records.orders.filter(function (order) {
+        });
+        const unpaidOrderRecords = records.orders.filter(function (order) {
+            if (order.status !== 'submitted' && order.status !== 'confirmed') return false;
             const payment = paymentForOrder(order.id);
             return !payment || payment.status !== 'verified';
-        }).length;
-        const unassignedPhotos = records.photos.filter(function (photo) {
+        });
+        const photosAwaitingAssignment = records.photos.filter(function (photo) {
             return !photo.learner_id && !photo.is_archived;
-        }).length;
+        });
         const learnersWithoutPhotos = records.learners.filter(function (learner) {
             return learner.is_active && !records.photos.some(function (photo) {
                 return photo.learner_id === learner.id && !photo.is_archived;
             });
-        }).length;
+        });
+        const firstMissingPhotoClass = learnersWithoutPhotos.length && records.classes.find(function (item) {
+            return item.id === learnersWithoutPhotos[0].class_id;
+        });
+        const firstMissingPhotoProject = firstMissingPhotoClass && records.projects.find(function (item) {
+            return item.id === firstMissingPhotoClass.project_id;
+        });
         [
-            { count: pendingConsent, text: 'Learners awaiting consent review', target: 'schools' },
-            { count: unpublished, text: 'Photos not yet published', target: 'photos' },
-            { count: unassignedPhotos, text: 'Photos awaiting learner assignment', target: 'photos' },
-            { count: learnersWithoutPhotos, text: 'Active learners without a photo', target: 'photos' },
-            { count: newBookings, text: 'Booking requests awaiting contact', target: 'bookings' },
-            { count: submittedOrders, text: 'Parent order requests to review', target: 'orders' },
-            { count: unpaidOrders, text: 'Orders awaiting payment verification', target: 'orders' }
-        ].forEach(function (item) {
+            {
+                count: learnersNeedingConsent.length,
+                text: 'Active learners without approved consent',
+                section: 'schools',
+                form: 'consentForm',
+                field: 'admin-consentLearner',
+                value: (learnersNeedingConsent[0] || {}).id
+            },
+            {
+                count: photosAwaitingAssignment.length,
+                text: 'Photos awaiting learner assignment',
+                section: 'photos',
+                form: 'photoAssignForm',
+                field: 'admin-photoAssignRecord',
+                value: (photosAwaitingAssignment[0] || {}).id
+            },
+            { count: publishableUnpublished, text: 'Photos ready to publish', section: 'photos', form: '#photo-tables' },
+            {
+                count: learnersWithoutPhotos.length,
+                text: 'Active learners without a photo',
+                section: 'photos',
+                form: 'photoUploadForm',
+                field: 'admin-photoBatchProject',
+                value: firstMissingPhotoProject && firstMissingPhotoProject.id
+            },
+            {
+                count: newBookings.length,
+                text: 'Booking requests awaiting contact',
+                section: 'bookings',
+                form: 'bookingStatusForm',
+                field: 'admin-bookingRecord',
+                value: (newBookings[0] || {}).id
+            },
+            {
+                count: submittedOrders.length,
+                text: 'Parent order requests to review',
+                section: 'orders',
+                form: 'orderStatusForm',
+                field: 'admin-orderRecord',
+                value: (submittedOrders[0] || {}).id
+            },
+            {
+                count: unpaidOrderRecords.length,
+                text: 'Orders awaiting payment verification',
+                section: 'orders',
+                form: 'paymentForm',
+                field: 'admin-paymentOrder',
+                value: (unpaidOrderRecords[0] || {}).id
+            }
+        ].filter(function (item) { return item.count > 0; }).forEach(function (item) {
             const row = document.createElement('li');
             row.appendChild(element('span', 'attention-count', String(item.count)));
             row.appendChild(element('span', '', item.text));
-            const link = element('button', 'text-action', 'Review');
+            const link = element('button', 'text-action', 'Open');
             link.type = 'button';
             link.addEventListener('click', function () {
-                activateSection(item.target);
+                openAdminTask(item.section, item.form, item.field, item.value);
             });
             row.appendChild(link);
             attentionList.appendChild(row);
         });
-        if (pendingConsent + unpublished + unassignedPhotos + learnersWithoutPhotos +
-            newBookings + submittedOrders + unpaidOrders === 0) {
-            attention.appendChild(element('p', 'empty-state', 'No bookings, orders, consent or photo publishing tasks are pending.'));
+        if (!attentionList.childElementCount) {
+            attention.appendChild(element('p', 'empty-state', 'Nothing needs immediate review. Use project readiness above for remaining setup.'));
         } else {
             attention.appendChild(attentionList);
         }
@@ -937,29 +1415,40 @@
         websiteSection.appendChild(element(
             'p',
             'text-muted',
-            'Current page keys: home hero.* and about.*; about story.* and team.image-primary; contact booking.*; services services.*; service-weddings, service-portraits, service-metric and service-fashion hero.*; portfolio gallery.*; school-photography hero.* and packages.*. Use Image for image keys and Link for home hero.cta-book.'
+            'Choose a page and section from the lists below. Use Text for wording, Image for photos, or Link for a button or link.'
         ));
-        const forms = element('div', 'backend-form-grid');
         const schoolForm = makeForm('Add school', [
             makeField('School name', 'schoolName', 'text', { required: true, maxLength: 160 }),
-            makeField('URL slug (leave blank to generate)', 'schoolSlug', 'text', { maxLength: 80, pattern: '[a-z0-9]+(-[a-z0-9]+)*' })
+            makeField('Contact email', 'schoolEmail', 'email', { maxLength: 254 }),
+            makeField('Phone', 'schoolPhone', 'tel', { maxLength: 40 }),
+            makeField('Address', 'schoolAddress', 'text', { maxLength: 500 })
         ], async function (data) {
             const name = String(data.get('schoolName')).trim();
-            const slug = String(data.get('schoolSlug')).trim() ||
-                name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            await window.MCMBackend.admin.create('schools', { name: name, slug: slug });
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            await window.MCMBackend.admin.create('schools', {
+                name: name,
+                slug: slug,
+                contact_email: String(data.get('schoolEmail') || '').trim(),
+                phone: String(data.get('schoolPhone') || '').trim(),
+                address: String(data.get('schoolAddress') || '').trim()
+            });
         });
         const projectForm = makeForm('Add school project', [
             makeField('School', 'projectSchool', 'select', { required: true, items: records.schools, label: function (item) { return item.name; } }),
             makeField('Project name', 'projectName', 'text', { required: true, maxLength: 160 }),
-            makeField('School year', 'projectYear', 'number', { required: true, min: 2000, max: 2200, step: 1 })
+            makeField('School year', 'projectYear', 'number', { required: true, min: 2000, max: 2200, step: 1 }),
+            makeField('Photography start date (optional)', 'projectStartDateNew', 'date', {}),
+            makeField('Photography end date (optional)', 'projectEndDateNew', 'date', {})
         ], async function (data) {
             await window.MCMBackend.admin.create('projects', {
                 school_id: data.get('projectSchool'),
                 name: String(data.get('projectName')).trim(),
-                school_year: Number(data.get('projectYear'))
+                school_year: Number(data.get('projectYear')),
+                photography_start_date: data.get('projectStartDateNew') || null,
+                photography_end_date: data.get('projectEndDateNew') || null
             });
         });
+        projectForm.id = 'projectForm';
         const classForm = makeForm('Add class', [
             makeField('Project', 'classProject', 'select', { required: true, items: records.projects, label: function (item) { return item.name + ' (' + item.school_year + ')'; } }),
             makeField('Class name', 'className', 'text', { required: true, maxLength: 100 })
@@ -969,22 +1458,26 @@
                 name: String(data.get('className')).trim()
             });
         });
+        classForm.id = 'classForm';
         const learnerForm = makeForm('Add learner', [
-            makeField('Class', 'learnerClass', 'select', { required: true, items: records.classes, label: function (item) { return item.name; } }),
-            makeField('Learner reference code', 'learnerReference', 'text', {
-                required: true,
+            makeField('School, project and class', 'learnerClass', 'select', { required: true, items: records.classes, label: learnerClassOptionLabel }),
+            makeField('Learner reference code (leave blank to create one)', 'learnerReference', 'text', {
                 maxLength: 40,
-                pattern: '[A-Za-z0-9-]{4,40}'
+                pattern: '[A-Za-z0-9\\-]{4,40}',
+                placeholder: 'Optional; created automatically'
             }),
             makeField('Learner display name', 'learnerName', 'text', { required: true, maxLength: 160 })
         ], async function (data) {
-            const reference = String(data.get('learnerReference')).trim().toUpperCase();
+            const reference = String(data.get('learnerReference') || '').trim().toUpperCase() ||
+                generateLearnerReference();
             await window.MCMBackend.admin.create('learners', {
                 class_id: data.get('learnerClass'),
                 reference_code: reference,
                 display_name: String(data.get('learnerName')).trim()
             });
+            return 'Learner added. Their access reference is ' + reference + '. Set a PIN before sharing parent access.';
         });
+        learnerForm.id = 'learnerForm';
         const consentForm = makeForm('Record or update photo consent', [
             makeField('Learner', 'consentLearner', 'select', { required: true, items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } }),
             makeField('Consent status', 'consentStatus', 'select', {
@@ -1015,6 +1508,7 @@
             });
             form.elements.consentSource.value = '';
         });
+        consentForm.id = 'consentForm';
         const pinForm = makeForm('Set or reset learner PIN', [
             makeField('Learner', 'pinLearner', 'select', { required: true, items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } }),
             makeField('6–12 digit PIN', 'learnerPin', 'password', {
@@ -1096,7 +1590,7 @@
         const learnerEditForm = makeForm('Edit learner', [
             makeField('Learner', 'learnerEditRecord', 'select', { required: true, items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } }),
             makeField('Class', 'learnerEditClass', 'select', { required: true, items: records.classes, label: function (item) { return item.name; } }),
-            makeField('Learner reference code', 'learnerEditReference', 'text', { required: true, maxLength: 40, pattern: '[A-Za-z0-9-]{4,40}' }),
+            makeField('Learner reference code', 'learnerEditReference', 'text', { required: true, maxLength: 40, pattern: '[A-Za-z0-9\\-]{4,40}' }),
             makeField('Learner display name', 'learnerEditName', 'text', { required: true, maxLength: 160 }),
             makeField('Active', 'learnerEditActive', 'select', { required: true, items: [{ id: 'true', name: 'Active' }, { id: 'false', name: 'Inactive' }], label: function (item) { return item.name; } })
         ], async function (data) {
@@ -1172,24 +1666,18 @@
         });
         guardianLinkForm.id = 'guardianLinkForm';
         [
-            schoolForm,
-            projectForm,
-            classForm,
-            learnerForm,
-            consentForm,
-            pinForm,
-            revokeAccessForm,
-            schoolEditForm,
-            projectEditForm,
-            classEditForm,
-            learnerEditForm,
-            csvForm,
-            guardianForm,
-            guardianLinkForm
-        ].forEach(function (form) {
-            forms.appendChild(form);
+            makeTaskGroup('1. Register a school', 'Start here. Add a school and its contact details before setting up a photography year.', [schoolForm]),
+            makeTaskGroup('2. Set up a photography year and classes', 'Create one project for the school year, then add the classes taking part.', [projectForm, classForm]),
+            makeTaskGroup('3. Add learners', 'Add learners individually or import a class list from a CSV file.', [learnerForm, csvForm]),
+            makeTaskGroup('4. Set up family access', 'Connect a parent or guardian to a learner, record photo consent, and manage learner access.', [
+                consentForm, pinForm, revokeAccessForm, guardianForm, guardianLinkForm
+            ]),
+            makeTaskGroup('Manage existing records', 'Choose a record to update. Empty schools, projects and classes can be deleted; linked records should be deactivated instead.', [
+                schoolEditForm, projectEditForm, classEditForm, learnerEditForm
+            ])
+        ].forEach(function (group) {
+            schoolsSection.appendChild(group);
         });
-        schoolsSection.appendChild(forms);
 
         const schoolEditElement = schoolEditForm.querySelector('form');
         schoolEditElement.elements.schoolEditRecord.addEventListener('change', function () {
@@ -1244,7 +1732,7 @@
             makeField('Default price per photo (ZAR)', 'photoDefaultPrice', 'number', { required: true, min: 0, max: 999999, step: 0.01 })
         ], async function (data) {
             const projectId = String(data.get('photoBatchProject'));
-            const files = Array.prototype.slice.call(data.get('photoFiles') || []);
+            const files = data.getAll('photoFiles');
             const allowedTypes = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
             if (!files.length || files.length > 200) {
                 throw new Error('Choose between 1 and 200 photo files per upload batch.');
@@ -1316,8 +1804,6 @@
             }
         });
         photoForm.id = 'photoUploadForm';
-        photoSection.appendChild(photoForm);
-        const photoForms = element('div', 'backend-form-grid');
         const photoAssignForm = makeForm('Assign or reassign a photo', [
             makeField('Photo', 'photoAssignRecord', 'select', { required: true, items: records.photos, label: function (item) { return item.title; } }),
             makeField('Learner', 'photoAssignLearner', 'select', { required: true, items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } })
@@ -1348,8 +1834,11 @@
             const photo = records.photos.find(function (item) { return item.id === photoPriceElement.elements.photoPriceRecord.value; });
             if (photo) photoPriceElement.elements.photoPriceAmount.value = (Number(photo.price_cents || 0) / 100).toFixed(2);
         });
-        photoForms.append(photoAssignForm, photoPriceForm);
-        photoSection.appendChild(photoForms);
+        photoSection.appendChild(makeTaskGroup(
+            'Photo library tasks',
+            'Upload a private batch, connect portraits to learners, then set prices before publishing galleries.',
+            [photoForm, photoAssignForm, photoPriceForm]
+        ));
         const photoTablesPanel = makePanel('Photo library');
         const photoTables = element('div', 'backend-tables');
         photoTables.id = 'photo-tables';
@@ -1372,17 +1861,47 @@
         qrClose.type = 'button';
         learnerQrImage = element('img', 'img-fluid learner-qr-image', '');
         learnerQrImage.alt = 'QR code for the parent access page; PIN is not included';
-        const qrDescription = element(
+        learnerQrImage.hidden = true;
+        learnerQrMessage = element(
             'p',
-            'text-muted',
+            'learner-qr-message',
             'This QR code opens the parent access page and fills in the learner reference only. Share the PIN separately.'
         );
+        learnerQrMessage.setAttribute('role', 'status');
+        learnerQrMessage.setAttribute('aria-live', 'polite');
+        learnerQrLink = document.createElement('input');
+        learnerQrLink.type = 'url';
+        learnerQrLink.className = 'form-control learner-access-link';
+        learnerQrLink.readOnly = true;
+        learnerQrLink.setAttribute('aria-label', 'Learner parent access link');
+        learnerQrCopy = element('button', 'btn btn-outline-primary', 'Copy access link');
+        learnerQrCopy.type = 'button';
         learnerQrDownload = element('a', 'btn btn-primary', 'Download QR');
-        learnerQrDialog.append(qrClose, learnerQrImage, qrDescription, learnerQrDownload);
+        learnerQrDownload.hidden = true;
+        learnerQrDialog.append(
+            qrClose,
+            learnerQrMessage,
+            learnerQrImage,
+            learnerQrLink,
+            learnerQrCopy,
+            learnerQrDownload
+        );
         sectionRoot.appendChild(learnerQrDialog);
         qrClose.addEventListener('click', function () { learnerQrDialog.close(); });
+        learnerQrCopy.addEventListener('click', async function () {
+            try {
+                if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+                    throw new Error('Clipboard access is unavailable in this browser.');
+                }
+                await navigator.clipboard.writeText(learnerQrLink.value);
+                learnerQrMessage.textContent = 'Access link copied. Share the PIN with the parent separately.';
+            } catch (error) {
+                learnerQrLink.focus();
+                learnerQrLink.select();
+                learnerQrMessage.textContent = 'Select the highlighted link and copy it. Share the PIN with the parent separately.';
+            }
+        });
 
-        const websiteForms = element('div', 'backend-form-grid');
         const packageForm = makeForm('Add school photography package', [
             makeField('Package name', 'packageName', 'text', { required: true, maxLength: 120 }),
             makeField('Description', 'packageDescription', 'textarea', { maxLength: 3000 }),
@@ -1429,15 +1948,11 @@
             packageEditElement.elements.packageEditActive.value = String(item.is_active);
         });
         const contentForm = makeForm('Add public page content', [
-            makeField('Page key (for example home or contact)', 'contentPage', 'text', {
-                required: true,
-                maxLength: 80,
-                pattern: '[a-z0-9-]{1,80}'
+            makeField('Website page', 'contentPage', 'select', {
+                required: true, items: cmsPages, label: function (item) { return item.name; }
             }),
-            makeField('Content key (must match a page data-cms-key)', 'contentKey', 'text', {
-                required: true,
-                maxLength: 120,
-                pattern: '[a-z0-9._-]{1,120}'
+            makeField('Page section', 'contentKey', 'select', {
+                required: true, items: cmsPages[0].fields, label: function (item) { return item.name; }
             }),
             makeField('Content type', 'contentType', 'select', {
                 required: true,
@@ -1510,8 +2025,12 @@
                 items: records.content,
                 label: function (item) { return item.page_key + ' / ' + item.content_key; }
             }),
-            makeField('Page key', 'editContentPage', 'text', { required: true, maxLength: 80, pattern: '[a-z0-9-]{1,80}' }),
-            makeField('Content key', 'editContentKey', 'text', { required: true, maxLength: 120, pattern: '[a-z0-9._-]{1,120}' }),
+            makeField('Website page', 'editContentPage', 'select', {
+                required: true, items: cmsPages, label: function (item) { return item.name; }
+            }),
+            makeField('Page section', 'editContentKey', 'select', {
+                required: true, items: cmsPages[0].fields, label: function (item) { return item.name; }
+            }),
             makeField('Content type', 'editContentType', 'select', {
                 required: true,
                 items: [
@@ -1582,16 +2101,34 @@
                 return item.id === editContentElement.elements.contentEditRecord.value;
             });
             if (!record) return;
+            const pageOptionExists = Array.prototype.some.call(
+                editContentElement.elements.editContentPage.options,
+                function (option) { return option.value === record.page_key; }
+            );
+            if (!pageOptionExists) {
+                const pageOption = element('option', '', 'Existing page: ' + record.page_key);
+                pageOption.value = record.page_key;
+                editContentElement.elements.editContentPage.appendChild(pageOption);
+            }
             editContentElement.elements.editContentPage.value = record.page_key;
-            editContentElement.elements.editContentKey.value = record.content_key;
+            populateCmsContentKeys(
+                editContentElement.elements.editContentPage,
+                editContentElement.elements.editContentKey,
+                record.content_key,
+                true
+            );
             editContentElement.elements.editContentType.value = record.content_type;
             editContentElement.elements.editContentValue.value = record.value;
             editContentElement.elements.editContentPublished.value = String(record.is_published);
         });
-        [packageForm, packageEditForm, contentForm, contentEditForm].forEach(function (form) {
-            websiteForms.appendChild(form);
-        });
-        websiteSection.appendChild(websiteForms);
+        websiteSection.append(
+            makeTaskGroup('School photography packages', 'Add packages or update the price and availability families see.', [
+                packageForm, packageEditForm
+            ]),
+            makeTaskGroup('Website text and photos', 'Choose a page and section from the lists, then publish the content you want visitors to see.', [
+                contentForm, contentEditForm
+            ])
+        );
         const websiteTablesPanel = makePanel('Published website data');
         const websiteTables = element('div', 'backend-tables');
         websiteTables.id = 'website-tables';
@@ -1698,7 +2235,11 @@
             bookingEditElement.elements.bookingDepositPaid.value = String(Boolean(record.deposit_paid_at));
             bookingEditElement.elements.bookingNotes.value = record.admin_notes || '';
         });
-        bookingsSection.append(bookingStatusForm);
+        bookingsSection.appendChild(makeTaskGroup(
+            'Respond to booking requests',
+            'Open a request to record your response, schedule a session, and save deposit details.',
+            [bookingStatusForm]
+        ));
         const bookingTablesPanel = makePanel('Booking requests');
         const bookingTables = element('div', 'backend-tables');
         bookingTables.id = 'booking-tables';
@@ -1741,7 +2282,6 @@
         bookingHistoryPanel.appendChild(bookingHistoryTable);
         bookingsSection.appendChild(bookingHistoryPanel);
 
-        const bookingServiceForms = element('div', 'backend-form-grid');
         const bookingServiceForm = makeForm('Add photography service', [
             makeField('Service name', 'serviceName', 'text', { required: true, maxLength: 100 }),
             makeField('Standard duration (minutes)', 'serviceDuration', 'number', { required: true, min: 15, max: 1440, step: 15 }),
@@ -1781,8 +2321,11 @@
             serviceEditElement.elements.serviceEditDisplayOrder.value = service.display_order;
             serviceEditElement.elements.serviceEditActive.value = String(service.is_active);
         });
-        bookingServiceForms.append(bookingServiceForm, serviceEditForm);
-        bookingsSection.appendChild(bookingServiceForms);
+        bookingsSection.appendChild(makeTaskGroup(
+            'Manage photography services',
+            'Add a service or update its duration and availability for new booking requests.',
+            [bookingServiceForm, serviceEditForm]
+        ));
 
         const orderForm = makeForm('Create admin order', [
             makeField('Learner', 'orderLearner', 'select', { required: true, items: records.learners, label: function (item) { return item.display_name + ' — ' + item.reference_code; } }),
@@ -1796,7 +2339,7 @@
                 data.getAll('orderPackages').filter(Boolean),
                 String(data.get('orderAdminNotes') || '').trim()
             );
-            setStatus('Order ' + result.order_code + ' created.');
+            return 'Order ' + result.order_code + ' created.';
         });
         orderForm.id = 'orderCreateForm';
         orderForm.querySelector('form').elements.orderLearner.addEventListener('change', updateDataSelectors);
@@ -1853,9 +2396,11 @@
             orderEditElement.elements.orderCancellationReason.value = record.cancellation_reason || '';
             orderEditElement.elements.orderEditNotes.value = record.admin_notes || '';
         });
-        [orderForm, orderStatusForm].forEach(function (form) {
-            ordersSection.appendChild(form);
-        });
+        ordersSection.appendChild(makeTaskGroup(
+            'Create and manage orders',
+            'Create a family order from learner photos or packages, then update its status as it is handled.',
+            [orderForm, orderStatusForm]
+        ));
         const orderTablesPanel = makePanel('Orders');
         const orderTables = element('div', 'backend-tables');
         orderTables.id = 'order-tables';
@@ -1933,7 +2478,11 @@
             paymentEditElement.elements.paymentChannel.value = payment ? payment.payment_channel : 'bank_transfer';
             paymentEditElement.elements.paymentNotes.value = payment ? payment.admin_notes : '';
         });
-        ordersSection.appendChild(paymentForm);
+        ordersSection.appendChild(makeTaskGroup(
+            'Record and verify payments',
+            'Only mark a payment verified after checking the actual bank transaction and matching the full order amount.',
+            [paymentForm]
+        ));
         const paymentTablePanel = makePanel('Payment verification queue');
         const paymentTable = element('div', 'backend-tables');
         paymentTable.id = 'payment-tables';
@@ -2013,7 +2562,11 @@
             productionEditElement.elements.productionInstructions.value = record.production_instructions || '';
             productionEditElement.elements.deliveryNotes.value = record.delivery_notes || '';
         });
-        productionSection.appendChild(productionForm);
+        productionSection.appendChild(makeTaskGroup(
+            'Update order fulfilment',
+            'Choose an order to update its production stage and delivery or collection progress.',
+            [productionForm]
+        ));
         const productionTablesPanel = makePanel('Production queue');
         const productionTables = element('div', 'backend-tables');
         productionTables.id = 'production-tables';
@@ -2110,7 +2663,11 @@
             }, 'singleton');
         });
         settingsForm.id = 'settingsForm';
-        settingsSection.appendChild(settingsForm);
+        settingsSection.appendChild(makeTaskGroup(
+            'Business and gallery settings',
+            'Set business contact details, booking hours, watermark appearance, and digital download rules.',
+            [settingsForm]
+        ));
         const accountNote = element(
             'p',
             'text-muted',
@@ -2126,7 +2683,11 @@
             setStatus('Administrator invitation sent to ' + result.email + '.');
             await refreshAdminUsers();
         });
-        settingsSection.appendChild(inviteAdminForm);
+        settingsSection.appendChild(makeTaskGroup(
+            'Invite another administrator',
+            'Only invite someone who should have full access to the admin dashboard.',
+            [inviteAdminForm]
+        ));
         const adminUsersPanel = makePanel('Administrator access');
         const adminUsersStatus = element('p', 'text-muted');
         adminUsersStatus.id = 'admin-user-status';
@@ -2229,13 +2790,28 @@
         const downloadContainer = document.getElementById('download-tables');
         const bookingHistoryContainer = document.getElementById('booking-history-tables');
         if (schoolContainer) schoolContainer.replaceChildren(
-            makeTable('Schools', ['Name', 'Slug', 'Contact', 'Status'], records.schools, function (item) {
-            return [item.name, item.slug, item.contact_email || item.phone, item.is_active ? 'Active' : 'Inactive'];
+            makeTable('Schools', ['Name', 'Slug', 'Contact'], records.schools, function (item) {
+            return [item.name, item.slug, item.contact_email || item.phone];
         }, {
             collection: 'schools',
+            statusHeader: 'School access',
             label: function (item) { return item.is_active ? 'Deactivate' : 'Activate'; },
             changes: function (item) { return { is_active: !item.is_active }; },
-            success: 'School status updated.'
+            success: 'School status updated.',
+            actions: function (item) {
+                if (records.projects.some(function (project) { return project.school_id === item.id; })) return [];
+                return [{
+                    label: 'Delete',
+                    danger: true,
+                    confirm: function () {
+                        return 'Permanently delete ' + item.name + '? This is only available when the school has no photography projects.';
+                    },
+                    success: 'School deleted.',
+                    run: function () {
+                        return window.MCMBackend.admin.remove('schools', item.id);
+                    }
+                }];
+            }
         }),
             makeTable('Projects', ['Project', 'School', 'Year', 'Photography dates', 'Status'], records.projects, function (item) {
             const school = records.schools.find(function (record) { return record.id === item.school_id; });
@@ -2248,14 +2824,50 @@
             ];
         }, {
             collection: 'projects',
+            statusHeader: 'Change status',
             label: function (item) { return item.status === 'active' ? 'Pause' : 'Activate'; },
             changes: function (item) { return { status: item.status === 'active' ? 'draft' : 'active' }; },
-            success: 'Project status updated.'
+            success: 'Project status updated.',
+            actions: function (item) {
+                const hasClasses = records.classes.some(function (classRecord) {
+                    return classRecord.project_id === item.id;
+                });
+                const hasPhotos = records.photos.some(function (photo) { return photo.project_id === item.id; });
+                const hasBatches = records.photoBatches.some(function (batch) { return batch.project_id === item.id; });
+                if (hasClasses || hasPhotos || hasBatches) return [];
+                return [{
+                    label: 'Delete',
+                    danger: true,
+                    confirm: function () {
+                        return 'Permanently delete the empty project "' + item.name + '"?';
+                    },
+                    success: 'Project deleted.',
+                    run: function () {
+                        return window.MCMBackend.admin.remove('projects', item.id);
+                    }
+                }];
+            }
         }),
             makeTable('Classes', ['Class', 'Project', 'Learners'], records.classes, function (item) {
             const project = records.projects.find(function (record) { return record.id === item.project_id; });
             const learnerCount = records.learners.filter(function (learner) { return learner.class_id === item.id; }).length;
             return [item.name, project ? project.name : '—', learnerCount];
+        }, {
+            hideStatus: true,
+            actions: function (item) {
+                if (records.learners.some(function (learner) { return learner.class_id === item.id; })) return [];
+                return [{
+                    label: 'Delete',
+                    danger: true,
+                    confirm: function () {
+                        return 'Permanently delete the empty class "' + item.name + '"?';
+                    },
+                    success: 'Class deleted.',
+                    run: function () {
+                        return window.MCMBackend.admin.remove('classes', item.id);
+                    }
+                }];
+            }
         }),
             makeTable('Learners', ['Name', 'Reference code', 'Class', 'Photo consent', 'Photos', 'Guardians'], records.learners, function (item) {
             const schoolClass = records.classes.find(function (record) { return record.id === item.class_id; });
@@ -2275,29 +2887,47 @@
             ];
         }, {
             collection: 'learners',
+            statusHeader: 'Learner access',
             label: function (item) { return item.is_active ? 'Deactivate' : 'Activate'; },
             changes: function (item) { return { is_active: !item.is_active }; },
             success: 'Learner status updated.',
             actions: function (item) {
                 return [{
                     label: 'Access QR',
-                    success: 'Learner access QR code generated.',
+                    success: 'Learner access link is ready to share.',
                     run: async function () {
-                        if (!window.QRCode || typeof window.QRCode.toDataURL !== 'function') {
-                            throw new Error('The QR code generator did not load. Check the network connection and try again.');
-                        }
                         if (!learnerQrDialog || !learnerQrImage || !learnerQrDownload) {
                             throw new Error('The learner QR preview is unavailable.');
                         }
                         const accessUrl = new URL('../parents/school-access.html', window.location.href);
                         accessUrl.searchParams.set('reference', item.reference_code);
-                        learnerQrImage.src = await window.QRCode.toDataURL(accessUrl.href, {
-                            width: 360,
-                            margin: 2,
-                            errorCorrectionLevel: 'M'
-                        });
-                        learnerQrDownload.href = learnerQrImage.src;
-                        learnerQrDownload.download = 'mcm-access-' + item.reference_code + '.png';
+                        learnerQrLink.value = accessUrl.href;
+                        learnerQrImage.hidden = true;
+                        learnerQrDownload.hidden = true;
+                        learnerQrMessage.textContent =
+                            'The access link opens the parent page with the learner code filled in. Share the PIN with the parent separately.';
+                        if (window.QRCode && typeof window.QRCode.toDataURL === 'function') {
+                            try {
+                                learnerQrImage.src = await window.QRCode.toDataURL(accessUrl.href, {
+                                    width: 360,
+                                    margin: 2,
+                                    errorCorrectionLevel: 'M'
+                                });
+                                learnerQrImage.hidden = false;
+                                learnerQrDownload.href = learnerQrImage.src;
+                                learnerQrDownload.download = 'mcm-access-' + item.reference_code + '.png';
+                                learnerQrDownload.hidden = false;
+                            } catch (error) {
+                                learnerQrMessage.textContent =
+                                    'QR creation failed. Copy or share the access link below; share the PIN separately.';
+                                setStatus('QR creation failed: ' + (error.message || 'unknown error') +
+                                    '. The access link is still available.', true);
+                            }
+                        } else {
+                            learnerQrMessage.textContent =
+                                'QR creation is unavailable. Copy or share the access link below; share the PIN separately.';
+                            setStatus('QR code generator is unavailable. The access link is still available.', true);
+                        }
                         learnerQrDialog.showModal();
                     }
                 }];
@@ -2312,27 +2942,26 @@
                 const assignment = item.is_archived ? 'Archived' :
                     (!item.learner_id ? 'Awaiting assignment' :
                         (item.is_published ? 'Published' : 'Assigned / draft'));
+                const blockReason = photoPublishBlockReason(item);
                 return [
                     item.title,
                     project ? project.name : '—',
                     batch ? batch.label : '—',
                     learner ? learner.display_name + ' (' + learner.reference_code + ')' : 'Unassigned',
                     formatCurrency(item.price_cents),
-                    assignment
+                    assignment + (blockReason ? ' — ' + blockReason : '')
                 ];
             }, {
                 collection: 'photos',
+                statusHeader: 'Gallery visibility',
                 label: function (item) {
                     if (item.is_archived) return 'Archived';
                     return item.is_published ? 'Unpublish' : 'Publish';
                 },
                 disabled: function (item) {
-                    if (item.is_archived) return true;
-                    if (item.is_published) return false;
-                    const learner = records.learners.find(function (record) { return record.id === item.learner_id; });
-                    return !item.learner_id || !item.preview_storage_path ||
-                        !learner || !learner.is_active || learner.consent_status !== 'approved';
+                    return Boolean(photoPublishBlockReason(item));
                 },
+                disabledReason: photoPublishBlockReason,
                 changes: function (item) { return { is_published: !item.is_published }; },
                 confirm: function (item) {
                     return item.is_published
