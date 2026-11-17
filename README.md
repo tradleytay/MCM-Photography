@@ -15,6 +15,7 @@ The backend project is under `supabase/`:
 
 - `migrations/` — the initial school schema and incremental workflow/operations migrations. No learner or school seed data is included.
 - `functions/parent-access` — rate-limited PIN verification and a short-lived, learner-scoped parent session.
+- `functions/admin-create-parent-share-link` — admin-only, seven-day direct gallery links for active learners with approved consent and published photos.
 - `functions/parent-gallery` and `functions/parent-end-session` — private signed photo URLs and session revocation.
 - `functions/admin-set-learner-pin` — admin-only PIN hashing and rotation.
 - `functions/admin-manage-users` — invite, suspend, and reinstate administrator accounts. There are no staff roles or public sign-ups.
@@ -43,6 +44,7 @@ supabase link --project-ref emyjyqrzyxjvxlhsxdtd
 supabase functions deploy parent-access --no-verify-jwt
 supabase functions deploy parent-end-session --no-verify-jwt
 supabase functions deploy admin-set-learner-pin --no-verify-jwt
+supabase functions deploy admin-create-parent-share-link --no-verify-jwt
 supabase functions deploy create-booking --no-verify-jwt
 supabase functions deploy parent-submit-order --no-verify-jwt
 supabase functions deploy parent-orders --no-verify-jwt
@@ -95,7 +97,7 @@ Use the Supabase Dashboard to inspect the new tables, RLS policies and storage b
 ### Security and operational requirements
 
 - Keep RLS enabled. Admin browser CRUD is permitted only when the signed-in user has the trusted `app_metadata.role = 'admin'` claim and is not suspended; database policies check the current Auth record so suspensions take effect even for an older token.
-- Parent sessions use a random opaque token stored in browser `sessionStorage`, with only an HMAC digest stored in the database. Sessions expire after 15 minutes; signed photo links expire after 5 minutes.
+- Parent PIN sessions use a random opaque token stored in browser `sessionStorage`, with only an HMAC digest stored in the database, and expire after 15 minutes. Admin-created direct gallery links are bearer links that expire after seven days; their token is carried in the URL fragment (not sent to the web server), stored in `sessionStorage` on use, and can be revoked with the learner's parent-session revocation control or by resetting that learner's PIN. The standard learner-code/PIN page remains the fallback if a direct link expires or is revoked. Share direct links only with the intended family. Signed photo links expire after 5 minutes.
 - Parent access is denied unless the learner is active, the school project is active, the school is active, and photo consent is recorded as approved. Store consent source and status accurately; only publish photos when consent is valid. A withdrawn or denied consent blocks new and existing gallery requests.
 - Schedule `select public.prune_parent_security_records();` daily through Supabase Cron after enabling `pg_cron`. It removes old access-attempt fingerprints and expired/revoked sessions; the audit log is intentionally retained.
 - Parent PINs are salted PBKDF2-SHA-256 hashes and access attempts are rate limited. Set `PARENT_ACCESS_HMAC_SECRET` before deploying parent functions. Configure `ALLOWED_ORIGINS` with the exact production origin; local defaults are for development only.
