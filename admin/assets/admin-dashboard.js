@@ -15,6 +15,7 @@
     let learnerQrImage;
     let learnerQrDownload;
     let learnerQrLink;
+    let learnerQrFallbackLink;
     let learnerQrCopy;
     let learnerQrMessage;
     let currentAdminUserId = '';
@@ -361,7 +362,25 @@
         if (options.max !== undefined) control.max = String(options.max);
         if (options.step !== undefined) control.step = String(options.step);
         if (options.inputMode) control.inputMode = options.inputMode;
-        wrapper.append(label, control);
+        if (type === 'password') {
+            const passwordGroup = element('div', 'password-input-group');
+            const toggle = element('button', 'password-toggle', 'Show');
+            toggle.type = 'button';
+            toggle.setAttribute('aria-controls', control.id);
+            toggle.setAttribute('aria-label', 'Show ' + labelText.toLowerCase());
+            toggle.setAttribute('aria-pressed', 'false');
+            toggle.addEventListener('click', function () {
+                const visible = control.type === 'password';
+                control.type = visible ? 'text' : 'password';
+                toggle.textContent = visible ? 'Hide' : 'Show';
+                toggle.setAttribute('aria-label', (visible ? 'Hide ' : 'Show ') + labelText.toLowerCase());
+                toggle.setAttribute('aria-pressed', String(visible));
+            });
+            passwordGroup.append(control, toggle);
+            wrapper.append(label, passwordGroup);
+        } else {
+            wrapper.append(label, control);
+        }
         return wrapper;
     }
 
@@ -451,13 +470,70 @@
         if (toggle && typeof toggle.actions === 'function') headingRow.appendChild(element('th', '', 'Actions'));
         head.appendChild(headingRow);
         const body = document.createElement('tbody');
-        rows.forEach(function (record) {
-            const row = document.createElement('tr');
-            rowValues(record).forEach(function (value) {
-                row.appendChild(element('td', '', value == null ? '' : String(value)));
+        const hasDetails = Boolean(toggle && typeof toggle.details === 'function');
+        const pageSize = hasDetails ? 10 : rows.length;
+        let visibleCount = Math.min(pageSize, rows.length);
+        const detailsDialog = hasDetails ? document.createElement('dialog') : null;
+        const detailsList = hasDetails ? element('dl', 'admin-record-details') : null;
+        const detailsHeading = hasDetails ? element('h3', '', '') : null;
+        if (detailsDialog) {
+            detailsDialog.className = 'admin-record-dialog';
+            detailsDialog.setAttribute('aria-label', title + ' record details');
+            const dialogHeader = element('div', 'admin-record-dialog__header');
+            const closeButton = element('button', 'btn btn-outline-secondary', 'Close');
+            closeButton.type = 'button';
+            closeButton.addEventListener('click', function () { detailsDialog.close(); });
+            dialogHeader.append(detailsHeading, closeButton);
+            detailsDialog.append(dialogHeader, detailsList);
+            detailsDialog.addEventListener('click', function (event) {
+                if (event.target === detailsDialog) detailsDialog.close();
             });
+        }
+
+        function showDetails(record) {
+            detailsHeading.textContent = typeof toggle.detailTitle === 'function'
+                ? toggle.detailTitle(record)
+                : title + ' details';
+            detailsList.replaceChildren();
+            toggle.details(record).forEach(function (field) {
+                const item = document.createElement('div');
+                const value = field.value == null || field.value === '' ? 'Not provided' : String(field.value);
+                // Render database values as text, never as markup.
+                item.append(element('dt', '', field.label), element('dd', '', value));
+                detailsList.appendChild(item);
+            });
+            detailsDialog.showModal();
+        }
+
+        function appendRecord(record, index) {
+            const row = document.createElement('tr');
+            rowValues(record).forEach(function (value, cellIndex) {
+                const cell = element('td', '', value == null ? '' : String(value));
+                cell.dataset.label = headers[cellIndex] || '';
+                row.appendChild(cell);
+            });
+            if (hasDetails) {
+                row.tabIndex = 0;
+                row.classList.add('admin-table-row--interactive');
+                const recordTitle = typeof toggle.detailTitle === 'function'
+                    ? toggle.detailTitle(record)
+                    : title;
+                row.setAttribute('aria-label', 'View ' + recordTitle + ' details');
+                row.dataset.paginationHidden = String(index >= visibleCount);
+                row.hidden = index >= visibleCount;
+                row.addEventListener('click', function (event) {
+                    if (event.target !== row && event.target.closest('button, a, input, select, textarea')) return;
+                    showDetails(record);
+                });
+                row.addEventListener('keydown', function (event) {
+                    if (event.target !== row || (event.key !== 'Enter' && event.key !== ' ')) return;
+                    event.preventDefault();
+                    showDetails(record);
+                });
+            }
             if (toggle && !toggle.hideStatus) {
                 const cell = document.createElement('td');
+                cell.dataset.label = toggle.statusHeader || 'Status';
                 const button = element('button', 'btn btn-sm btn-outline-primary', toggle.label(record));
                 button.type = 'button';
                 button.disabled = typeof toggle.disabled === 'function' && toggle.disabled(record);
@@ -489,6 +565,7 @@
             }
             if (toggle && typeof toggle.actions === 'function') {
                 const actionsCell = document.createElement('td');
+                actionsCell.dataset.label = 'Actions';
                 toggle.actions(record).forEach(function (action) {
                     const actionButton = element(
                         'button',
@@ -517,10 +594,30 @@
                 row.appendChild(actionsCell);
             }
             body.appendChild(row);
-        });
+        }
+
+        // Keep every record searchable while revealing the list in pages of ten.
+        rows.forEach(appendRecord);
         table.append(head, body);
         responsive.appendChild(table);
         section.appendChild(responsive);
+        if (hasDetails && rows.length > visibleCount) {
+            const pagination = element('div', 'table-pagination');
+            const showMore = element('button', 'btn btn-outline-secondary', 'Show 10 more');
+            showMore.type = 'button';
+            showMore.addEventListener('click', function () {
+                const previousCount = visibleCount;
+                visibleCount = Math.min(visibleCount + pageSize, rows.length);
+                Array.prototype.slice.call(body.rows, previousCount, visibleCount).forEach(function (row) {
+                    row.dataset.paginationHidden = 'false';
+                    row.hidden = false;
+                });
+                showMore.hidden = visibleCount >= rows.length;
+            });
+            pagination.appendChild(showMore);
+            section.appendChild(pagination);
+        }
+        if (detailsDialog) section.appendChild(detailsDialog);
         return section;
     }
 
@@ -997,7 +1094,6 @@
         section.appendChild(metrics);
         appendProjectReadiness(section);
 
-        const grid = element('div', 'content-grid');
         const attention = makePanel('Next actions');
         attention.id = 'attention-panel';
         const attentionList = element('ul', 'attention-list');
@@ -1100,31 +1196,7 @@
             attention.appendChild(attentionList);
         }
 
-        const recent = makePanel('Recent admin activity');
-        const activity = element('ul', 'activity-list');
-        const auditEntries = records.audit.slice().sort(function (left, right) {
-            return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
-        }).slice(0, 4);
-        auditEntries.forEach(function (item) {
-            const row = document.createElement('li');
-            const time = document.createElement('time');
-            const date = new Date(item.created_at);
-            time.textContent = Number.isNaN(date.getTime())
-                ? ''
-                : new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(date);
-            row.append(
-                time,
-                element('span', '', item.action + ' ' + String(item.resource_table || 'record').replace(/_/g, ' '))
-            );
-            activity.appendChild(row);
-        });
-        if (auditEntries.length) {
-            recent.appendChild(activity);
-        } else {
-            recent.appendChild(element('p', 'empty-state', 'Admin changes will appear here when records are updated.'));
-        }
-        grid.append(attention, recent);
-        section.appendChild(grid);
+        section.appendChild(attention);
 
         const activityGrid = element('div', 'content-grid');
         const recentBookings = makePanel('Recent bookings');
@@ -1340,7 +1412,14 @@
             const section = sectionRoot.querySelector('[data-admin-section="' + activeSection + '"]');
             if (!section) return;
             section.querySelectorAll('.admin-table tbody tr').forEach(function (row) {
-                row.hidden = query !== '' && !row.textContent.toLowerCase().includes(query);
+                row.hidden = query
+                    ? !row.textContent.toLowerCase().includes(query)
+                    : row.dataset.paginationHidden === 'true';
+            });
+            section.querySelectorAll('.table-pagination').forEach(function (pagination) {
+                const tableSection = pagination.closest('.backend-module');
+                const remaining = tableSection.querySelectorAll('tr[data-pagination-hidden="true"]').length > 0;
+                pagination.querySelector('button').hidden = Boolean(query) || !remaining;
             });
         });
         const refresh = document.getElementById('admin-refresh');
@@ -1874,6 +1953,8 @@
         learnerQrLink.className = 'form-control learner-access-link';
         learnerQrLink.readOnly = true;
         learnerQrLink.setAttribute('aria-label', 'Learner parent access link');
+        learnerQrFallbackLink = element('a', 'learner-access-fallback', 'Fallback: open the PIN access page');
+        learnerQrFallbackLink.hidden = true;
         learnerQrCopy = element('button', 'btn btn-outline-primary', 'Copy access link');
         learnerQrCopy.type = 'button';
         learnerQrDownload = element('a', 'btn btn-primary', 'Download QR');
@@ -1883,6 +1964,7 @@
             learnerQrMessage,
             learnerQrImage,
             learnerQrLink,
+            learnerQrFallbackLink,
             learnerQrCopy,
             learnerQrDownload
         );
@@ -1894,14 +1976,15 @@
                     throw new Error('Clipboard access is unavailable in this browser.');
                 }
                 await navigator.clipboard.writeText(learnerQrLink.value);
-                learnerQrMessage.textContent = 'Access link copied. Share the PIN with the parent separately.';
+                learnerQrMessage.textContent = learnerQrFallbackLink.hidden
+                    ? 'PIN access link copied. Share the learner PIN separately.'
+                    : 'Seven-day gallery link copied. Keep it private; use the fallback below if it expires.';
             } catch (error) {
                 learnerQrLink.focus();
                 learnerQrLink.select();
-                learnerQrMessage.textContent = 'Select the highlighted link and copy it. Share the PIN with the parent separately.';
+                learnerQrMessage.textContent = 'Select the highlighted link and copy it.';
             }
         });
-
         const packageForm = makeForm('Add school photography package', [
             makeField('Package name', 'packageName', 'text', { required: true, maxLength: 120 }),
             makeField('Description', 'packageDescription', 'textarea', { maxLength: 3000 }),
@@ -2777,6 +2860,56 @@
         }
     }
 
+    async function showLearnerAccessQr(learner, direct) {
+        if (!learnerQrDialog || !learnerQrImage || !learnerQrDownload || !learnerQrFallbackLink) {
+            throw new Error('The learner QR preview is unavailable.');
+        }
+        const fallbackUrl = new URL('../parents/school-access.html', window.location.href);
+        fallbackUrl.searchParams.set('reference', learner.reference_code);
+        let accessUrl = fallbackUrl;
+        learnerQrFallbackLink.hidden = !direct;
+        learnerQrFallbackLink.href = fallbackUrl.href;
+        if (direct) {
+            const share = await window.MCMBackend.admin.createLearnerShareLink(learner.id);
+            accessUrl = new URL('../parents/school-gallery.html', window.location.href);
+            accessUrl.searchParams.set('reference', learner.reference_code);
+            accessUrl.hash = new URLSearchParams({ access: share.accessToken }).toString();
+            const expiry = new Date(share.expiresAt);
+            learnerQrMessage.textContent = 'This private link opens the gallery without a PIN until ' +
+                expiry.toLocaleString() + '. Anyone with the link can view it. Revoke it from learner access controls if needed. If it expires, use the PIN fallback below.';
+        } else {
+            learnerQrMessage.textContent =
+                'This link opens the parent access page with the learner code filled in. Share the PIN separately.';
+        }
+        learnerQrLink.value = accessUrl.href;
+        learnerQrImage.hidden = true;
+        learnerQrDownload.hidden = true;
+        learnerQrImage.alt = direct
+            ? 'Seven-day private learner gallery access QR code'
+            : 'Parent access page QR code; PIN is not included';
+        const filePrefix = direct ? 'mcm-gallery-' : 'mcm-access-';
+        if (typeof window.qrcode === 'function') {
+            try {
+                const qr = window.qrcode(0, 'M');
+                qr.addData(accessUrl.href, 'Byte');
+                qr.make();
+                learnerQrImage.src = qr.createDataURL(6, 24);
+                learnerQrImage.hidden = false;
+                learnerQrDownload.href = learnerQrImage.src;
+                learnerQrDownload.download = filePrefix + learner.reference_code + '.png';
+                learnerQrDownload.hidden = false;
+            } catch (error) {
+                learnerQrMessage.textContent += ' QR creation failed; the link is still available above.';
+                setStatus('QR creation failed: ' + (error.message || 'unknown error') +
+                    '. The access link is still available.', true);
+            }
+        } else {
+            learnerQrMessage.textContent += ' QR creation is unavailable; the link is still available above.';
+            setStatus('QR code generator is unavailable. The access link is still available.', true);
+        }
+        learnerQrDialog.showModal();
+    }
+
     function renderWorkspaceTables() {
         const schoolContainer = document.getElementById('school-tables');
         const photoContainer = document.getElementById('photo-tables');
@@ -2790,10 +2923,21 @@
         const downloadContainer = document.getElementById('download-tables');
         const bookingHistoryContainer = document.getElementById('booking-history-tables');
         if (schoolContainer) schoolContainer.replaceChildren(
-            makeTable('Schools', ['Name', 'Slug', 'Contact'], records.schools, function (item) {
-            return [item.name, item.slug, item.contact_email || item.phone];
+            makeTable('Schools', ['School', 'Contact', 'Phone'], records.schools, function (item) {
+            return [item.name, item.contact_email || '—', item.phone || '—'];
         }, {
             collection: 'schools',
+            detailTitle: function (item) { return item.name; },
+            details: function (item) {
+                return [
+                    { label: 'Contact email', value: item.contact_email },
+                    { label: 'Phone', value: item.phone },
+                    { label: 'Address', value: item.address },
+                    { label: 'URL slug', value: item.slug },
+                    { label: 'Status', value: item.is_active ? 'Active' : 'Inactive' },
+                    { label: 'Created', value: item.created_at }
+                ];
+            },
             statusHeader: 'School access',
             label: function (item) { return item.is_active ? 'Deactivate' : 'Activate'; },
             changes: function (item) { return { is_active: !item.is_active }; },
@@ -2813,17 +2957,24 @@
                 }];
             }
         }),
-            makeTable('Projects', ['Project', 'School', 'Year', 'Photography dates', 'Status'], records.projects, function (item) {
+            makeTable('Projects', ['Project', 'School'], records.projects, function (item) {
             const school = records.schools.find(function (record) { return record.id === item.school_id; });
-            return [
-                item.name,
-                school ? school.name : '—',
-                item.school_year,
-                [item.photography_start_date, item.photography_end_date].filter(Boolean).join(' – ') || 'Not scheduled',
-                item.status
-            ];
+            return [item.name, school ? school.name : '—'];
         }, {
             collection: 'projects',
+            detailTitle: function (item) { return item.name; },
+            details: function (item) {
+                const school = records.schools.find(function (record) { return record.id === item.school_id; });
+                return [
+                    { label: 'School', value: school && school.name },
+                    { label: 'School year', value: item.school_year },
+                    { label: 'Status', value: item.status },
+                    { label: 'Photography start', value: item.photography_start_date },
+                    { label: 'Photography end', value: item.photography_end_date },
+                    { label: 'Notes', value: item.notes },
+                    { label: 'Created', value: item.created_at }
+                ];
+            },
             statusHeader: 'Change status',
             label: function (item) { return item.status === 'active' ? 'Pause' : 'Activate'; },
             changes: function (item) { return { status: item.status === 'active' ? 'draft' : 'active' }; },
@@ -2854,6 +3005,18 @@
             return [item.name, project ? project.name : '—', learnerCount];
         }, {
             hideStatus: true,
+            detailTitle: function (item) { return item.name; },
+            details: function (item) {
+                const project = records.projects.find(function (record) { return record.id === item.project_id; });
+                const school = project && records.schools.find(function (record) { return record.id === project.school_id; });
+                return [
+                    { label: 'Project', value: project && project.name },
+                    { label: 'School', value: school && school.name },
+                    { label: 'School year', value: project && project.school_year },
+                    { label: 'Learners', value: records.learners.filter(function (learner) { return learner.class_id === item.id; }).length },
+                    { label: 'Created', value: item.created_at }
+                ];
+            },
             actions: function (item) {
                 if (records.learners.some(function (learner) { return learner.class_id === item.id; })) return [];
                 return [{
@@ -2869,24 +3032,39 @@
                 }];
             }
         }),
-            makeTable('Learners', ['Name', 'Reference code', 'Class', 'Photo consent', 'Photos', 'Guardians'], records.learners, function (item) {
-            const schoolClass = records.classes.find(function (record) { return record.id === item.class_id; });
+            makeTable('Learners', ['Learner', 'Photos'], records.learners, function (item) {
             const photoCount = records.photos.filter(function (photo) { return photo.learner_id === item.id && !photo.is_archived; }).length;
-            const guardianLinks = records.learnerGuardians.filter(function (link) { return link.learner_id === item.id; });
-            const guardianNames = guardianLinks.map(function (link) {
-                const guardian = records.guardians.find(function (record) { return record.id === link.guardian_id; });
-                return guardian ? guardian.full_name : '';
-            }).filter(Boolean).join(', ');
-            return [
-                item.display_name,
-                item.reference_code,
-                schoolClass ? schoolClass.name : '—',
-                item.consent_status,
-                photoCount,
-                guardianNames || 'None linked'
-            ];
+            return [item.display_name, photoCount];
         }, {
             collection: 'learners',
+            detailTitle: function (item) { return item.display_name; },
+            details: function (item) {
+            const schoolClass = records.classes.find(function (record) { return record.id === item.class_id; });
+            const project = schoolClass && records.projects.find(function (record) { return record.id === schoolClass.project_id; });
+            const school = project && records.schools.find(function (record) { return record.id === project.school_id; });
+            const photoCount = records.photos.filter(function (photo) { return photo.learner_id === item.id && !photo.is_archived; }).length;
+            const guardianLinks = records.learnerGuardians.filter(function (link) { return link.learner_id === item.id; });
+            const guardianDetails = guardianLinks.map(function (link) {
+                const guardian = records.guardians.find(function (record) { return record.id === link.guardian_id; });
+                return guardian
+                    ? [guardian.full_name, guardian.email, guardian.phone].filter(Boolean).join(' · ')
+                    : '';
+            }).filter(Boolean).join(', ');
+            return [
+                { label: 'Reference code', value: item.reference_code },
+                { label: 'Class', value: schoolClass && schoolClass.name },
+                { label: 'Project', value: project && project.name },
+                { label: 'School', value: school && school.name },
+                { label: 'School year', value: project && project.school_year },
+                { label: 'Photo consent', value: item.consent_status },
+                { label: 'Consent recorded', value: item.consent_recorded_at },
+                { label: 'Consent note', value: item.consent_source },
+                { label: 'Photos', value: photoCount },
+                { label: 'Guardians', value: guardianDetails || 'None linked' },
+                { label: 'Status', value: item.is_active ? 'Active' : 'Inactive' },
+                { label: 'Registered', value: item.created_at }
+            ];
+            },
             statusHeader: 'Learner access',
             label: function (item) { return item.is_active ? 'Deactivate' : 'Activate'; },
             changes: function (item) { return { is_active: !item.is_active }; },
@@ -2896,39 +3074,13 @@
                     label: 'Access QR',
                     success: 'Learner access link is ready to share.',
                     run: async function () {
-                        if (!learnerQrDialog || !learnerQrImage || !learnerQrDownload) {
-                            throw new Error('The learner QR preview is unavailable.');
-                        }
-                        const accessUrl = new URL('../parents/school-access.html', window.location.href);
-                        accessUrl.searchParams.set('reference', item.reference_code);
-                        learnerQrLink.value = accessUrl.href;
-                        learnerQrImage.hidden = true;
-                        learnerQrDownload.hidden = true;
-                        learnerQrMessage.textContent =
-                            'The access link opens the parent page with the learner code filled in. Share the PIN with the parent separately.';
-                        if (window.QRCode && typeof window.QRCode.toDataURL === 'function') {
-                            try {
-                                learnerQrImage.src = await window.QRCode.toDataURL(accessUrl.href, {
-                                    width: 360,
-                                    margin: 2,
-                                    errorCorrectionLevel: 'M'
-                                });
-                                learnerQrImage.hidden = false;
-                                learnerQrDownload.href = learnerQrImage.src;
-                                learnerQrDownload.download = 'mcm-access-' + item.reference_code + '.png';
-                                learnerQrDownload.hidden = false;
-                            } catch (error) {
-                                learnerQrMessage.textContent =
-                                    'QR creation failed. Copy or share the access link below; share the PIN separately.';
-                                setStatus('QR creation failed: ' + (error.message || 'unknown error') +
-                                    '. The access link is still available.', true);
-                            }
-                        } else {
-                            learnerQrMessage.textContent =
-                                'QR creation is unavailable. Copy or share the access link below; share the PIN separately.';
-                            setStatus('QR code generator is unavailable. The access link is still available.', true);
-                        }
-                        learnerQrDialog.showModal();
+                        await showLearnerAccessQr(item, false);
+                    }
+                }, {
+                    label: 'Create 7-day gallery link',
+                    success: 'Seven-day private gallery link created. Share it only with the learner’s family.',
+                    run: async function () {
+                        await showLearnerAccessQr(item, true);
                     }
                 }];
             }

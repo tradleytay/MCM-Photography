@@ -142,14 +142,14 @@
                 if (status) {
                     status.textContent = window.MCMBackend
                         ? window.MCMBackend.readinessMessage() + ' Please contact us by phone or WhatsApp instead.'
-                        : 'Booking requests are temporarily unavailable. Please contact us by phone or WhatsApp instead.';
+                        : 'Enquiries are temporarily unavailable. Please contact us by phone or WhatsApp instead.';
                     status.classList.add('text-danger');
                 }
                 return;
             }
             submit.disabled = true;
             if (status) {
-                status.textContent = 'Sending your booking request…';
+                status.textContent = 'Sending your enquiry…';
                 status.classList.remove('text-danger', 'text-success');
             }
             try {
@@ -165,14 +165,14 @@
                 });
                 contactForm.reset();
                 if (status) {
-                    status.textContent = 'Request received. Your reference is ' + result.bookingCode +
-                        '. We will contact you to confirm details.';
+                    status.textContent = 'Thank you. Your enquiry reference is ' + result.bookingCode +
+                        '. Our team will contact you to discuss the details.';
                     status.classList.add('text-success');
                     status.classList.remove('text-danger');
                 }
             } catch (error) {
                 if (status) {
-                    status.textContent = error.message || 'The booking request could not be sent. Please try again or contact us directly.';
+                    status.textContent = error.message || 'Your enquiry could not be sent. Please try again or contact us directly.';
                     status.classList.add('text-danger');
                     status.classList.remove('text-success');
                 }

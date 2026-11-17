@@ -10,6 +10,22 @@
         status.classList.toggle('is-error', Boolean(isError));
     }
 
+    document.querySelectorAll('[data-password-toggle]').forEach(function (toggle) {
+        const input = document.getElementById(toggle.dataset.passwordToggle);
+        if (!input) {
+            throw new Error('Password visibility control is missing its input.');
+        }
+
+        toggle.addEventListener('click', function () {
+            const visible = input.type === 'password';
+            const action = visible ? 'Hide' : 'Show';
+            input.type = visible ? 'text' : 'password';
+            toggle.textContent = action;
+            toggle.setAttribute('aria-label', action + ' ' + input.labels[0].textContent.toLowerCase());
+            toggle.setAttribute('aria-pressed', String(visible));
+        });
+    });
+
     async function initialize() {
         if (!window.MCMBackend || !window.MCMBackend.isConfigured()) {
             setStatus(

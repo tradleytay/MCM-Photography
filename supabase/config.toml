@@ -28,6 +28,9 @@ verify_jwt = false
 [functions.admin-set-learner-pin]
 verify_jwt = false
 
+[functions.admin-create-parent-share-link]
+verify_jwt = false
+
 [functions.admin-manage-users]
 verify_jwt = false
 

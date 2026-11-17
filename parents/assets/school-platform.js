@@ -115,8 +115,13 @@
     function appendAccessLink(notice) {
         if (!notice) return;
         const link = document.createElement('a');
-        link.href = 'school-access.html';
-        link.textContent = 'Return to Parent Access';
+        const accessUrl = new URL('school-access.html', window.location.href);
+        const reference = new URLSearchParams(window.location.search).get('reference');
+        if (reference && /^[A-Za-z0-9-]{4,40}$/.test(reference)) {
+            accessUrl.searchParams.set('reference', reference.toUpperCase());
+        }
+        link.href = accessUrl.href;
+        link.textContent = 'Use the learner code and PIN instead';
         notice.append(' ', link);
     }
 
@@ -594,6 +599,20 @@
                     node.style.display = 'none';
                 });
             } else {
+                const shareToken = new URLSearchParams(window.location.hash.slice(1)).get('access');
+                if (shareToken) {
+                    if (window.location.protocol !== 'file:') {
+                        window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                    }
+                    try {
+                        window.MCMBackend.parent.useShareLink(shareToken);
+                    } catch (error) {
+                        window.MCMBackend.parent.clearAccess();
+                        const notice = showNotice(galleryRoot.parentElement, error.message, 'alert-danger');
+                        appendAccessLink(notice);
+                        return;
+                    }
+                }
                 connectGallery();
             }
         }

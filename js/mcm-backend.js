@@ -305,6 +305,10 @@
             }
             return result.data;
         },
+        createLearnerShareLink: async function (learnerId) {
+            await requireAdminUser();
+            return invoke('admin-create-parent-share-link', { learnerId: learnerId });
+        },
         manageAdminUsers: async function (action, details) {
             await requireAdminUser();
             if (!['list', 'invite', 'suspend', 'reinstate'].includes(action)) {
@@ -333,6 +337,12 @@
     });
 
     const parent = Object.freeze({
+        useShareLink: function (accessToken) {
+            if (typeof accessToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(accessToken)) {
+                throw new Error('This gallery link is invalid. Use the learner code and PIN instead.');
+            }
+            global.sessionStorage.setItem(parentAccessKey, accessToken);
+        },
         access: async function (reference, pin) {
             const result = await invoke('parent-access', { reference: reference, pin: pin });
             if (!result || typeof result.accessToken !== 'string' || !result.accessToken) {
